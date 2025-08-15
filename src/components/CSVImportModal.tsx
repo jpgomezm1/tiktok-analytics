@@ -341,14 +341,17 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
                       <Select
                         value={columnMapping[header] || ''}
                         onValueChange={(value) => {
-                          setColumnMapping(prev => ({ ...prev, [header]: value }));
+                          setColumnMapping(prev => ({ 
+                            ...prev, 
+                            [header]: value === 'none' ? '' : value 
+                          }));
                         }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select field" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Don't import</SelectItem>
+                          <SelectItem value="none">Don't import</SelectItem>
                           {DATABASE_FIELDS.map((field) => (
                             <SelectItem key={field.value} value={field.value}>
                               {field.label}
