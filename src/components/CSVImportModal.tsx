@@ -2,11 +2,10 @@ import { useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, X, CheckCircle, AlertCircle, Download } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Papa from 'papaparse';
 import { Video } from '@/hooks/useVideos';
@@ -21,53 +20,92 @@ interface CSVRow {
   [key: string]: string;
 }
 
-const DATABASE_FIELDS = [
-  { value: 'title', label: 'Title' },
-  { value: 'image_url', label: 'Image URL' },
-  { value: 'video_url', label: 'Video URL' },
-  { value: 'external_link', label: 'External Link' },
-  { value: 'published_date', label: 'Published Date' },
-  { value: 'video_type', label: 'Video Type' },
-  { value: 'views', label: 'Views' },
-  { value: 'likes', label: 'Likes' },
-  { value: 'comments', label: 'Comments' },
-  { value: 'shares', label: 'Shares' },
-  { value: 'reach', label: 'Reach' },
-  { value: 'duration_seconds', label: 'Duration (seconds)' },
-  { value: 'engagement_rate', label: 'Engagement Rate' },
-  { value: 'full_video_watch_rate', label: 'Full Video Watch Rate' },
-  { value: 'total_time_watched', label: 'Total Time Watched' },
-  { value: 'avg_time_watched', label: 'Avg Time Watched' },
-  { value: 'traffic_for_you', label: 'For You Page Traffic' },
-  { value: 'traffic_follow', label: 'Following Traffic' },
-  { value: 'traffic_hashtag', label: 'Hashtag Traffic' },
-  { value: 'traffic_sound', label: 'Sound Traffic' },
-  { value: 'traffic_profile', label: 'Profile Traffic' },
-  { value: 'traffic_search', label: 'Search Traffic' },
-  { value: 'saves', label: 'Saves' },
-  { value: 'new_followers', label: 'New Followers' },
-  { value: 'guion', label: 'Script/Guion' },
-  { value: 'hook', label: 'Hook' },
-];
+interface ImportResult {
+  success: number;
+  failed: number;
+  errors: string[];
+}
+
+// Automatic column mapping from CSV headers to database fields
+const COLUMN_MAPPING: Record<string, string> = {
+  'Image': 'image_url',
+  'URL': 'video_url',
+  'Title': 'title',
+  'Date': 'published_date',
+  'Link': 'external_link',
+  'Type': 'video_type',
+  'Views': 'views',
+  'Likes': 'likes',
+  'Comments': 'comments',
+  'Shares': 'shares',
+  'Reach': 'reach',
+  'Duration': 'duration_seconds',
+  'Engagement': 'engagement_rate',
+  'Full video watched rate': 'full_video_watch_rate',
+  'Total time watched seconds': 'total_time_watched',
+  'Avg. time watched seconds': 'avg_time_watched',
+  'For You': 'traffic_for_you',
+  'Follow': 'traffic_follow',
+  'Hashtag': 'traffic_hashtag',
+  'Sound': 'traffic_sound',
+  'Personal profile': 'traffic_profile',
+  'Search': 'traffic_search',
+  'Saves': 'saves',
+  'New Followers': 'new_followers',
+  'Guion': 'guion',
+  'Hook': 'hook',
+};
 
 export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps) => {
-  const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'importing'>('upload');
+  const [step, setStep] = useState<'upload' | 'preview' | 'importing' | 'complete'>('upload');
   const [csvData, setCsvData] = useState<CSVRow[]>([]);
-  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
-  const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
   const [fileName, setFileName] = useState('');
   const [importProgress, setImportProgress] = useState(0);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
 
   const resetModal = () => {
     setStep('upload');
     setCsvData([]);
-    setCsvHeaders([]);
-    setColumnMapping({});
     setFileName('');
     setImportProgress(0);
+    setImportResult(null);
     setIsDragOver(false);
+  };
+
+  const parseValue = (value: string, field: string): any => {
+    if (!value || value.trim() === '') return null;
+    
+    const numericFields = ['views', 'likes', 'comments', 'shares', 'reach', 'duration_seconds', 
+                          'total_time_watched', 'traffic_for_you', 'traffic_follow', 
+                          'traffic_hashtag', 'traffic_sound', 'traffic_profile', 
+                          'traffic_search', 'saves', 'new_followers'];
+    
+    const percentageFields = ['engagement_rate', 'full_video_watch_rate'];
+    const decimalFields = ['avg_time_watched'];
+    
+    if (numericFields.includes(field)) {
+      const parsed = parseInt(value.replace(/[,\s%]/g, ''));
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    
+    if (percentageFields.includes(field)) {
+      const parsed = parseFloat(value.replace('%', ''));
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    
+    if (decimalFields.includes(field)) {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    
+    if (field === 'published_date') {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? new Date().toISOString().split('T')[0] : date.toISOString().split('T')[0];
+    }
+    
+    return value.trim();
   };
 
   const handleFileUpload = useCallback((file: File) => {
@@ -96,11 +134,18 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
         }
 
         const data = results.data as CSVRow[];
-        const headers = Object.keys(data[0] || {});
+        
+        if (data.length === 0) {
+          toast({
+            title: "Empty CSV file",
+            description: "Please upload a CSV file with data",
+            variant: "destructive",
+          });
+          return;
+        }
         
         setCsvData(data);
-        setCsvHeaders(headers);
-        setStep('mapping');
+        setStep('preview');
       },
       error: (error) => {
         toast({
@@ -132,103 +177,95 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
     setIsDragOver(false);
   }, []);
 
-  const parseValue = (value: string, field: string): any => {
-    if (!value || value.trim() === '') return null;
-    
-    const numericFields = ['views', 'likes', 'comments', 'shares', 'reach', 'duration_seconds', 
-                          'total_time_watched', 'traffic_for_you', 'traffic_follow', 
-                          'traffic_hashtag', 'traffic_sound', 'traffic_profile', 
-                          'traffic_search', 'saves', 'new_followers'];
-    
-    const percentageFields = ['engagement_rate', 'full_video_watch_rate'];
-    const decimalFields = ['avg_time_watched'];
-    
-    if (numericFields.includes(field)) {
-      const parsed = parseInt(value.replace(/[,\s]/g, ''));
-      return isNaN(parsed) ? 0 : parsed;
-    }
-    
-    if (percentageFields.includes(field)) {
-      const parsed = parseFloat(value.replace('%', ''));
-      return isNaN(parsed) ? 0 : parsed;
-    }
-    
-    if (decimalFields.includes(field)) {
-      const parsed = parseFloat(value);
-      return isNaN(parsed) ? 0 : parsed;
-    }
-    
-    if (field === 'published_date') {
-      const date = new Date(value);
-      return isNaN(date.getTime()) ? new Date().toISOString().split('T')[0] : date.toISOString().split('T')[0];
-    }
-    
-    return value.trim();
-  };
-
-  const handlePreview = () => {
-    const mappedFields = Object.values(columnMapping).filter(Boolean);
-    if (mappedFields.length === 0) {
-      toast({
-        title: "No columns mapped",
-        description: "Please map at least one column to continue",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!columnMapping.title) {
-      toast({
-        title: "Title required",
-        description: "Please map a column to the Title field",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setStep('preview');
-  };
-
   const handleImport = async () => {
     setStep('importing');
     setImportProgress(0);
 
+    const result: ImportResult = {
+      success: 0,
+      failed: 0,
+      errors: []
+    };
+
     try {
-      const videos = csvData.map((row, index) => {
-        const video: any = {};
-        
-        Object.entries(columnMapping).forEach(([csvColumn, dbField]) => {
-          if (dbField && row[csvColumn] !== undefined) {
-            video[dbField] = parseValue(row[csvColumn], dbField);
+      const processedVideos: any[] = [];
+      
+      csvData.forEach((row, index) => {
+        try {
+          const video: any = {};
+          
+          // Apply automatic column mapping
+          Object.entries(COLUMN_MAPPING).forEach(([csvColumn, dbField]) => {
+            if (row[csvColumn] !== undefined) {
+              const value = parseValue(row[csvColumn], dbField);
+              if (value !== null) {
+                video[dbField] = value;
+              }
+            }
+          });
+
+          // Ensure required fields have defaults
+          if (!video.title || video.title.trim() === '') {
+            video.title = `Video ${index + 1}`;
           }
-        });
+          if (!video.published_date) {
+            video.published_date = new Date().toISOString().split('T')[0];
+          }
+          
+          // Set default values for numeric fields
+          const numericDefaults = {
+            views: 0, likes: 0, comments: 0, shares: 0, reach: 0,
+            total_time_watched: 0, traffic_for_you: 0, traffic_follow: 0,
+            traffic_hashtag: 0, traffic_sound: 0, traffic_profile: 0,
+            traffic_search: 0, saves: 0, new_followers: 0
+          };
+          
+          Object.entries(numericDefaults).forEach(([field, defaultValue]) => {
+            if (video[field] === undefined || video[field] === null) {
+              video[field] = defaultValue;
+            }
+          });
 
-        // Ensure required fields have defaults
-        if (!video.title) video.title = `Video ${index + 1}`;
-        if (!video.published_date) video.published_date = new Date().toISOString().split('T')[0];
-        if (video.views === undefined) video.views = 0;
-        if (video.likes === undefined) video.likes = 0;
-        if (video.comments === undefined) video.comments = 0;
-        if (video.shares === undefined) video.shares = 0;
-
-        return video;
+          processedVideos.push(video);
+          result.success++;
+        } catch (error) {
+          result.failed++;
+          result.errors.push(`Row ${index + 1}: ${error instanceof Error ? error.message : 'Processing error'}`);
+        }
       });
 
-      // Import in batches to show progress
-      const batchSize = 10;
-      for (let i = 0; i < videos.length; i += batchSize) {
-        const batch = videos.slice(i, i + batchSize);
-        await Promise.all(batch.map(video => onImport([video])));
-        setImportProgress(Math.min(100, ((i + batchSize) / videos.length) * 100));
+      // Import videos in batches
+      const batchSize = 5;
+      for (let i = 0; i < processedVideos.length; i += batchSize) {
+        const batch = processedVideos.slice(i, i + batchSize);
+        
+        try {
+          for (const video of batch) {
+            await onImport([video]);
+          }
+          setImportProgress(Math.min(100, ((i + batch.length) / processedVideos.length) * 100));
+        } catch (error) {
+          result.failed += batch.length;
+          result.success -= batch.length;
+          result.errors.push(`Batch ${Math.floor(i / batchSize) + 1}: Import failed`);
+        }
       }
 
-      toast({
-        title: "Import successful",
-        description: `Successfully imported ${videos.length} videos`,
-      });
+      setImportResult(result);
+      setStep('complete');
 
-      resetModal();
-      onClose();
+      if (result.success > 0) {
+        toast({
+          title: "Import completed",
+          description: `Successfully imported ${result.success} videos${result.failed > 0 ? `, ${result.failed} failed` : ''}`,
+        });
+      } else {
+        toast({
+          title: "Import failed",
+          description: "No videos were imported successfully",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Import failed",
@@ -239,13 +276,24 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
     }
   };
 
-  const previewData = csvData.slice(0, 5).map(row => {
+  const previewData = csvData.slice(0, 5).map((row, index) => {
     const mapped: any = {};
-    Object.entries(columnMapping).forEach(([csvColumn, dbField]) => {
-      if (dbField && row[csvColumn] !== undefined) {
-        mapped[dbField] = parseValue(row[csvColumn], dbField);
+    
+    // Apply automatic column mapping for preview
+    Object.entries(COLUMN_MAPPING).forEach(([csvColumn, dbField]) => {
+      if (row[csvColumn] !== undefined) {
+        const value = parseValue(row[csvColumn], dbField);
+        if (value !== null) {
+          mapped[dbField] = value;
+        }
       }
     });
+    
+    // Ensure title has a value for preview
+    if (!mapped.title || mapped.title.trim() === '') {
+      mapped.title = `Video ${index + 1}`;
+    }
+    
     return mapped;
   });
 
@@ -296,83 +344,22 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
               <CardHeader>
                 <CardTitle className="text-text-primary flex items-center gap-2">
                   <Download className="w-5 h-5" />
-                  CSV Format Requirements
+                  CSV Format (Automatic Mapping)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-text-secondary">
-                <p>Your CSV should contain columns for video data such as:</p>
+                <p>Your CSV columns will be automatically mapped to our database fields:</p>
                 <div className="grid grid-cols-2 gap-2 mt-2">
-                  <Badge variant="outline">Title</Badge>
-                  <Badge variant="outline">Views</Badge>
-                  <Badge variant="outline">Likes</Badge>
-                  <Badge variant="outline">Comments</Badge>
-                  <Badge variant="outline">Shares</Badge>
-                  <Badge variant="outline">Published Date</Badge>
+                  <Badge variant="outline">Title → title</Badge>
+                  <Badge variant="outline">Views → views</Badge>
+                  <Badge variant="outline">Likes → likes</Badge>
+                  <Badge variant="outline">Date → published_date</Badge>
+                  <Badge variant="outline">Image → image_url</Badge>
+                  <Badge variant="outline">URL → video_url</Badge>
                 </div>
-                <p className="mt-3">The next step will let you map your CSV columns to our database fields.</p>
+                <p className="mt-3">The system will automatically detect and map your columns based on their names.</p>
               </CardContent>
             </Card>
-          </div>
-        )}
-
-        {step === 'mapping' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-text-primary">Column Mapping</h3>
-                <p className="text-text-secondary">Map your CSV columns to database fields</p>
-              </div>
-              <Badge variant="outline">{fileName}</Badge>
-            </div>
-
-            <Card>
-              <CardContent className="space-y-4 p-6">
-                {csvHeaders.map((header) => (
-                  <div key={header} className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <label className="text-sm font-medium text-text-primary">
-                        {header}
-                      </label>
-                      <p className="text-xs text-text-muted">
-                        Sample: {csvData[0]?.[header] || 'N/A'}
-                      </p>
-                    </div>
-                    <div className="w-64">
-                      <Select
-                        value={columnMapping[header] || ''}
-                        onValueChange={(value) => {
-                          setColumnMapping(prev => ({ 
-                            ...prev, 
-                            [header]: value === 'none' ? '' : value 
-                          }));
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select field" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Don't import</SelectItem>
-                          {DATABASE_FIELDS.map((field) => (
-                            <SelectItem key={field.value} value={field.value}>
-                              {field.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep('upload')}>
-                Back
-              </Button>
-              <Button onClick={handlePreview}>
-                Preview Data
-              </Button>
-            </div>
           </div>
         )}
 
@@ -416,8 +403,8 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
             </div>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep('mapping')}>
-                Back to Mapping
+              <Button variant="outline" onClick={() => setStep('upload')}>
+                Back
               </Button>
               <Button onClick={handleImport}>
                 Import {csvData.length} Videos
@@ -445,6 +432,51 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
                 {Math.round(importProgress)}% complete
               </p>
             </div>
+          </div>
+        )}
+
+        {step === 'complete' && importResult && (
+          <div className="space-y-6 text-center">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${
+              importResult.success > 0 ? 'bg-gradient-primary' : 'bg-destructive'
+            }`}>
+              {importResult.success > 0 ? (
+                <CheckCircle className="w-8 h-8 text-white" />
+              ) : (
+                <AlertCircle className="w-8 h-8 text-white" />
+              )}
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary mb-2">
+                Import Complete
+              </h3>
+              <p className="text-text-secondary">
+                {importResult.success} videos imported successfully
+                {importResult.failed > 0 && `, ${importResult.failed} failed`}
+              </p>
+            </div>
+            
+            {importResult.errors.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-destructive">Import Errors</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1 text-sm text-text-secondary max-h-32 overflow-y-auto">
+                    {importResult.errors.slice(0, 10).map((error, index) => (
+                      <p key={index}>• {error}</p>
+                    ))}
+                    {importResult.errors.length > 10 && (
+                      <p>... and {importResult.errors.length - 10} more errors</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Button onClick={() => { resetModal(); onClose(); }}>
+              Close
+            </Button>
           </div>
         )}
       </DialogContent>
