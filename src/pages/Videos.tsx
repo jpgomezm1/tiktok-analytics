@@ -1,30 +1,15 @@
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { useVideos } from '@/hooks/useVideos';
 import { VideoCard } from '@/components/VideoCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, Filter, Grid, List, Plus } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
 
 const Videos = () => {
-  const { user, loading: authLoading } = useAuth();
   const { videos, loading } = useVideos();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-purple-bright border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
 
   const filteredVideos = videos.filter(video =>
     video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -32,8 +17,7 @@ const Videos = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8">
+    <div className="p-6 space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-text-primary mb-2">Video Library</h1>
@@ -115,7 +99,6 @@ const Videos = () => {
             ))}
           </div>
         )}
-      </div>
     </div>
   );
 };

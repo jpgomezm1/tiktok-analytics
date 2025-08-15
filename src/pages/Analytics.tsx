@@ -1,29 +1,13 @@
-import { useAuth } from '@/hooks/useAuth';
 import { useVideos } from '@/hooks/useVideos';
 import { MetricCard } from '@/components/MetricCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Eye, Heart, MessageCircle, Share2, Users, Target, Zap } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
 
 const Analytics = () => {
-  const { user, loading: authLoading } = useAuth();
   const { analytics, loading } = useVideos();
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-purple-bright border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8">
+    <div className="p-6 space-y-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-text-primary mb-2">Analytics Dashboard</h1>
           <p className="text-text-secondary">Deep insights into your TikTok performance and growth patterns</p>
@@ -161,7 +145,6 @@ const Analytics = () => {
             </section>
           </div>
         )}
-      </div>
     </div>
   );
 };

@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { MetricCard } from '@/components/MetricCard';
 import { VideoCard } from '@/components/VideoCard';
 import { CSVImportModal } from '@/components/CSVImportModal';
-import { AppSidebar } from '@/components/AppSidebar';
 import { useVideos } from '@/hooks/useVideos';
 import { useAuth } from '@/hooks/useAuth';
 import { 
@@ -18,7 +17,6 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 const Dashboard = () => {
   const { analytics, loading, videos, addVideo } = useVideos();
@@ -44,51 +42,37 @@ const Dashboard = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
+    <div className="p-6 space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Dashboard</h1>
+          <p className="text-text-secondary">
+            Welcome back, {user?.user_metadata?.display_name || user?.email}
+          </p>
+        </div>
         
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="border-b border-border bg-card">
-            <div className="flex h-16 items-center justify-between px-6">
-              <div className="flex items-center space-x-4">
-                <SidebarTrigger className="md:hidden" />
-                <div className="hidden md:flex items-center space-x-4">
-                  <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    Dashboard
-                  </h1>
-                  <div className="h-6 w-px bg-border" />
-                  <p className="text-text-secondary">
-                    Welcome back, {user?.user_metadata?.display_name || user?.email}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAddVideo(true)}
-                  className="text-text-secondary border-border hover:bg-muted"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Add Video</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCSVImport(true)}
-                  className="text-text-secondary border-border hover:bg-muted"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Import Data</span>
-                </Button>
-              </div>
-            </div>
-          </header>
-
-          <main className="flex-1 p-6 space-y-6 overflow-auto">
+        <div className="flex items-center space-x-2 mt-4 sm:mt-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAddVideo(true)}
+            className="text-text-secondary border-border hover:bg-muted"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Add Video</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCSVImport(true)}
+            className="text-text-secondary border-border hover:bg-muted"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Import Data</span>
+          </Button>
+        </div>
+      </div>
             {!analytics || analytics.totalVideos === 0 ? (
               // Empty state
               <div className="max-w-2xl mx-auto text-center py-12">
@@ -224,20 +208,17 @@ const Dashboard = () => {
                 </Card>
               </>
             )}
-          </main>
-        </div>
 
-        <CSVImportModal
-          open={showCSVImport}
-          onClose={() => setShowCSVImport(false)}
-          onImport={async (videosData) => {
-            for (const video of videosData) {
-              await addVideo(video);
-            }
-          }}
-        />
-      </div>
-    </SidebarProvider>
+      <CSVImportModal
+        open={showCSVImport}
+        onClose={() => setShowCSVImport(false)}
+        onImport={async (videosData) => {
+          for (const video of videosData) {
+            await addVideo(video);
+          }
+        }}
+      />
+    </div>
   );
 };
 
