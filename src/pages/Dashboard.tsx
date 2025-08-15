@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MetricCard } from '@/components/MetricCard';
 import { VideoCard } from '@/components/VideoCard';
+import { CSVImportModal } from '@/components/CSVImportModal';
 import { useVideos } from '@/hooks/useVideos';
 import { useAuth } from '@/hooks/useAuth';
 import { 
@@ -20,10 +21,11 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Dashboard = () => {
-  const { analytics, loading, videos } = useVideos();
+  const { analytics, loading, videos, addVideo } = useVideos();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [showAddVideo, setShowAddVideo] = useState(false);
+  const [showCSVImport, setShowCSVImport] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -69,6 +71,7 @@ const Dashboard = () => {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setShowCSVImport(true)}
               className="text-text-secondary border-border hover:bg-muted"
             >
               <Upload className="w-4 h-4 mr-2" />
@@ -114,7 +117,11 @@ const Dashboard = () => {
                 <Plus className="w-4 h-4 mr-2" />
                 Add Your First Video
               </Button>
-              <Button variant="outline" className="border-border text-text-secondary">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowCSVImport(true)}
+                className="border-border text-text-secondary"
+              >
                 <Upload className="w-4 h-4 mr-2" />
                 Import CSV Data
               </Button>
@@ -226,6 +233,16 @@ const Dashboard = () => {
           </>
         )}
       </main>
+
+      <CSVImportModal
+        open={showCSVImport}
+        onClose={() => setShowCSVImport(false)}
+        onImport={async (videosData) => {
+          for (const video of videosData) {
+            await addVideo(video);
+          }
+        }}
+      />
     </div>
   );
 };
