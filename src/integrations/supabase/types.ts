@@ -14,7 +14,180 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      growth_insights: {
+        Row: {
+          affected_video_ids: string[] | null
+          confidence_score: number | null
+          created_at: string | null
+          date_generated: string | null
+          description: string | null
+          id: string
+          insight_type: string
+          is_active: boolean | null
+          metric_impact: number | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          affected_video_ids?: string[] | null
+          confidence_score?: number | null
+          created_at?: string | null
+          date_generated?: string | null
+          description?: string | null
+          id?: string
+          insight_type: string
+          is_active?: boolean | null
+          metric_impact?: number | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          affected_video_ids?: string[] | null
+          confidence_score?: number | null
+          created_at?: string | null
+          date_generated?: string | null
+          description?: string | null
+          id?: string
+          insight_type?: string
+          is_active?: boolean | null
+          metric_impact?: number | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          total_followers: number | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id: string
+          total_followers?: number | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          total_followers?: number | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      videos: {
+        Row: {
+          avg_time_watched: number | null
+          comments: number | null
+          created_at: string | null
+          duration_seconds: number | null
+          engagement_rate: number | null
+          external_link: string | null
+          full_video_watch_rate: number | null
+          guion: string | null
+          hook: string | null
+          id: string
+          image_url: string | null
+          likes: number | null
+          new_followers: number | null
+          performance_score: number | null
+          published_date: string
+          reach: number | null
+          saves: number | null
+          shares: number | null
+          title: string
+          total_time_watched: number | null
+          traffic_follow: number | null
+          traffic_for_you: number | null
+          traffic_hashtag: number | null
+          traffic_profile: number | null
+          traffic_search: number | null
+          traffic_sound: number | null
+          updated_at: string | null
+          user_id: string
+          video_type: string | null
+          video_url: string | null
+          views: number | null
+        }
+        Insert: {
+          avg_time_watched?: number | null
+          comments?: number | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          engagement_rate?: number | null
+          external_link?: string | null
+          full_video_watch_rate?: number | null
+          guion?: string | null
+          hook?: string | null
+          id?: string
+          image_url?: string | null
+          likes?: number | null
+          new_followers?: number | null
+          performance_score?: number | null
+          published_date: string
+          reach?: number | null
+          saves?: number | null
+          shares?: number | null
+          title: string
+          total_time_watched?: number | null
+          traffic_follow?: number | null
+          traffic_for_you?: number | null
+          traffic_hashtag?: number | null
+          traffic_profile?: number | null
+          traffic_search?: number | null
+          traffic_sound?: number | null
+          updated_at?: string | null
+          user_id: string
+          video_type?: string | null
+          video_url?: string | null
+          views?: number | null
+        }
+        Update: {
+          avg_time_watched?: number | null
+          comments?: number | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          engagement_rate?: number | null
+          external_link?: string | null
+          full_video_watch_rate?: number | null
+          guion?: string | null
+          hook?: string | null
+          id?: string
+          image_url?: string | null
+          likes?: number | null
+          new_followers?: number | null
+          performance_score?: number | null
+          published_date?: string
+          reach?: number | null
+          saves?: number | null
+          shares?: number | null
+          title?: string
+          total_time_watched?: number | null
+          traffic_follow?: number | null
+          traffic_for_you?: number | null
+          traffic_hashtag?: number | null
+          traffic_profile?: number | null
+          traffic_search?: number | null
+          traffic_sound?: number | null
+          updated_at?: string | null
+          user_id?: string
+          video_type?: string | null
+          video_url?: string | null
+          views?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
