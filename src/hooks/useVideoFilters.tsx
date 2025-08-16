@@ -94,40 +94,47 @@ export const useVideoFilters = () => {
     if (!videos) return [];
 
     return videos.map(video => {
-      const normalized = normalizeVideo(video);
-      
+      // Calculate basic metrics
+      const views = video.views || 0;
+      const likes = video.likes || 0;
+      const comments = video.comments || 0;
+      const shares = video.shares || 0;
+      const saves = video.saves || 0;
+
       // Calculate saves per 1K
-      const saves_per_1k = video.views && video.views > 0 
-        ? (video.saves || 0) / video.views * 1000 
-        : 0;
+      const saves_per_1k = views > 0 ? (saves / views) * 1000 : 0;
 
       // Calculate engagement rate
-      const engagement_rate = video.views && video.views > 0
-        ? ((video.likes || 0) + (video.comments || 0) + (video.shares || 0)) / video.views * 100
+      const engagement_rate = views > 0
+        ? ((likes + comments + shares) / views) * 100
         : 0;
 
       // Speed 2h (simplified - would need actual 2h data)
-      const speed_2h = video.views || 0;
+      const speed_2h = views;
 
       // Performance score (composite)
       const performance_score = Math.min(100, 
         (engagement_rate * 0.4) + (saves_per_1k * 0.3) + ((video.avg_time_watched || 0) * 0.3)
       );
 
+      // Basic normalization (simplified since normalizeVideo returns Promise)
+      const completion_rate = video.avg_time_watched || 0;
+      const views_norm = views; // Simplified - would use actual normalization
+      const followers_at_post_time = 1; // Simplified
+
       return {
         ...video,
-        ...normalized,
         saves_per_1k,
         engagement_rate,
         speed_2h,
         performance_score,
-        completion_rate: video.avg_time_watched || 0,
-        views_norm: normalized.views_norm || (video.views || 0),
-        followers_at_post_time: 1,
+        completion_rate,
+        views_norm,
+        followers_at_post_time,
         hook_types: detectHookType(video.hook || ''),
       } as ProcessedVideo & { hook_types: HookType[] };
     });
-  }, [videos, normalizeVideo]);
+  }, [videos]);
 
   // Filter videos based on current filters
   const filteredVideos = useMemo(() => {

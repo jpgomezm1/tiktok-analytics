@@ -22,7 +22,13 @@ export const useSavedViews = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSavedViews(data || []);
+      
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        filters: item.filters as VideoFilters
+      }));
+      
+      setSavedViews(transformedData);
     } catch (error) {
       console.error('Error loading saved views:', error);
       toast({
@@ -50,7 +56,7 @@ export const useSavedViews = () => {
         .insert({
           user_id: user.id,
           name,
-          filters,
+          filters: filters as any, // Cast to Json type for Supabase
           sort_by: sortBy,
           normalize_by_1k: normalizeBy1K,
         })
@@ -59,7 +65,12 @@ export const useSavedViews = () => {
 
       if (error) throw error;
 
-      setSavedViews(prev => [data, ...prev]);
+      const transformedData = {
+        ...data,
+        filters: data.filters as VideoFilters
+      };
+
+      setSavedViews(prev => [transformedData, ...prev]);
       toast({
         title: "Vista guardada",
         description: `La vista "${name}" se guardó correctamente ✅`,

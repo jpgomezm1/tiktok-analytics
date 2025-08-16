@@ -33,7 +33,7 @@ export const exportToCSV = (videos: ProcessedVideo[], filename?: string) => {
   // Create CSV rows
   const rows = videos.map(video => {
     return columns.map(col => {
-      let value = video[col.key as keyof ProcessedVideo];
+      let value = (video as any)[col.key];
       
       // Handle special formatting
       if (col.key === 'engagement_rate' && typeof value === 'number') {
