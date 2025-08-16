@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      followers_history: {
+        Row: {
+          created_at: string | null
+          entry_date: string
+          followers_count: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entry_date: string
+          followers_count: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entry_date?: string
+          followers_count?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       growth_insights: {
         Row: {
           affected_video_ids: string[] | null
@@ -91,7 +115,9 @@ export type Database = {
           avg_time_watched: number | null
           comments: number | null
           created_at: string | null
+          cta_type: string | null
           duration_seconds: number | null
+          editing_style: string | null
           engagement_rate: number | null
           external_link: string | null
           full_video_watch_rate: number | null
@@ -116,6 +142,7 @@ export type Database = {
           traffic_sound: number | null
           updated_at: string | null
           user_id: string
+          video_theme: string | null
           video_type: string | null
           video_url: string | null
           views: number | null
@@ -124,7 +151,9 @@ export type Database = {
           avg_time_watched?: number | null
           comments?: number | null
           created_at?: string | null
+          cta_type?: string | null
           duration_seconds?: number | null
+          editing_style?: string | null
           engagement_rate?: number | null
           external_link?: string | null
           full_video_watch_rate?: number | null
@@ -149,6 +178,7 @@ export type Database = {
           traffic_sound?: number | null
           updated_at?: string | null
           user_id: string
+          video_theme?: string | null
           video_type?: string | null
           video_url?: string | null
           views?: number | null
@@ -157,7 +187,9 @@ export type Database = {
           avg_time_watched?: number | null
           comments?: number | null
           created_at?: string | null
+          cta_type?: string | null
           duration_seconds?: number | null
+          editing_style?: string | null
           engagement_rate?: number | null
           external_link?: string | null
           full_video_watch_rate?: number | null
@@ -182,6 +214,7 @@ export type Database = {
           traffic_sound?: number | null
           updated_at?: string | null
           user_id?: string
+          video_theme?: string | null
           video_type?: string | null
           video_url?: string | null
           views?: number | null

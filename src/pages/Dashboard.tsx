@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { MetricCard } from '@/components/MetricCard';
 import { VideoCard } from '@/components/VideoCard';
 import { CSVImportModal } from '@/components/CSVImportModal';
+import { FollowersWidget } from '@/components/FollowersWidget';
 import { useVideos } from '@/hooks/useVideos';
 import { useAuth } from '@/hooks/useAuth';
 import { useT } from '@/i18n';
@@ -55,7 +56,8 @@ const Dashboard = () => {
           </p>
         </div>
         
-        <div className="flex items-center space-x-2 mt-4 sm:mt-0">
+        <div className="flex items-center gap-3 mt-4 sm:mt-0">
+          <FollowersWidget compact />
           <Button
             variant="outline"
             size="sm"

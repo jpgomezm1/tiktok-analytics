@@ -154,7 +154,9 @@ const dictionary = {
     saveSettings: "Guardar configuración",
     saving: "Guardando...",
     settingsSaved: "Configuración guardada",
-    settingsUpdated: "Tu configuración ha sido actualizada correctamente."
+    settingsUpdated: "Tu configuración ha sido actualizada correctamente.",
+    followersSection: "Historial de seguidores",
+    followersDescription: "Gestiona tu historial diario de seguidores para métricas más precisas"
   },
   forms: {
     required: "Este campo es obligatorio",
@@ -162,6 +164,20 @@ const dictionary = {
     passwordTooShort: "La contraseña debe tener al menos 6 caracteres",
     submit: "Enviar",
     reset: "Reiniciar"
+  },
+  followers: {
+    todayTitle: "Seguidores hoy",
+    history: "Historial de seguidores",
+    save: "Guardar",
+    saving: "Guardando...",
+    saved: "Guardado ✅",
+    error: "No se pudo guardar, intenta de nuevo",
+    validationError: "Ingresa un número entero mayor o igual a 0",
+    updated: "Actualizado para hoy",
+    delta7days: "Delta 7 días",
+    last14days: "Últimos 14 días",
+    noHistoryForDate: "Sin historial de seguidores para esta fecha",
+    placeholder: "5088"
   }
 };
 

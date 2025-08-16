@@ -7,11 +7,14 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { FollowersWidget } from '@/components/FollowersWidget';
 import { useToast } from '@/hooks/use-toast';
-import { Brain, Key, Clock, Zap, Shield, Save } from 'lucide-react';
+import { useT } from '@/i18n';
+import { Brain, Key, Clock, Zap, Shield, Save, Users } from 'lucide-react';
 
 const Settings = () => {
   const { toast } = useToast();
+  const t = useT;
   const [settings, setSettings] = useState({
     aiEnabled: true,
     analysisFrequency: 'weekly',
@@ -33,8 +36,8 @@ const Settings = () => {
       localStorage.setItem('aiSettings', JSON.stringify(settings));
       
       toast({
-        title: "Settings saved",
-        description: "Your AI analysis preferences have been updated.",
+        title: t('settings.settingsSaved'),
+        description: t('settings.settingsUpdated'),
       });
     } catch (error) {
       toast({
@@ -60,12 +63,26 @@ const Settings = () => {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
           <Brain className="w-8 h-8 text-purple-400" />
-          <h1 className="text-3xl font-bold text-text-primary">AI Settings</h1>
+          <h1 className="text-3xl font-bold text-text-primary">{t('settings.title')}</h1>
         </div>
-        <p className="text-text-secondary">Configure your AI-powered content analysis and recommendations</p>
+        <p className="text-text-secondary">Configura tu análisis de contenido con IA y recomendaciones</p>
       </div>
 
       <div className="space-y-6">
+        {/* Followers History Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-text-primary">
+              <Users className="w-5 h-5" />
+              Historial de seguidores
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-text-secondary mb-4">Gestiona tu historial diario de seguidores para métricas más precisas</p>
+            <FollowersWidget />
+          </CardContent>
+        </Card>
+
         {/* API Configuration */}
         <Card>
           <CardHeader>
