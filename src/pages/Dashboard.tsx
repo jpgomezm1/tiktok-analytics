@@ -17,6 +17,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PerformanceTrendsChart } from '@/components/PerformanceTrendsChart';
 
 const Dashboard = () => {
   const { analytics, loading, videos, addVideo } = useVideos();
@@ -151,12 +152,7 @@ const Dashboard = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                        <div className="text-center">
-                          <Sparkles className="w-8 h-8 text-purple-bright mx-auto mb-2" />
-                          <p className="text-text-muted">Chart coming soon</p>
-                        </div>
-                      </div>
+                      <PerformanceTrendsChart videos={videos} />
                     </CardContent>
                   </Card>
 
