@@ -9,7 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Zap, BarChart3, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useVideos } from '@/hooks/useVideos';
+import { Zap, BarChart3, TrendingUp, AlertTriangle, CheckCircle, Play, ExternalLink } from 'lucide-react';
 
 interface PredictionResult {
   viralScore: number;
@@ -19,8 +20,17 @@ interface PredictionResult {
   risks: string[];
 }
 
+interface VideoExample {
+  id: string;
+  title: string;
+  published_date: string;
+  engagement_rate: number;
+  video_url?: string;
+}
+
 export const ViralPotentialAnalyzer = () => {
   const { toast } = useToast();
+  const { videos } = useVideos();
   const [loading, setLoading] = useState(false);
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [formData, setFormData] = useState({
@@ -99,20 +109,92 @@ export const ViralPotentialAnalyzer = () => {
     const titleBonus = data.title.length > 50 ? 1.2 : 1.0;
     const expectedViews = Math.round(baseViews * titleBonus * (viralScore / 100));
 
+    // Extract and limit recommendations
+    const lines = analysis.split('\n').filter(line => line.trim().length > 0);
+    let recommendations: string[] = [];
+    let risks: string[] = [];
+    
+    lines.forEach(line => {
+      const cleaned = line.trim();
+      if (cleaned.match(/^[\d\-\*•]/) || 
+          cleaned.toLowerCase().includes('recomendación') || 
+          cleaned.toLowerCase().includes('usar') ||
+          cleaned.toLowerCase().includes('mantener') ||
+          cleaned.toLowerCase().includes('mejorar')) {
+        const rec = cleaned.replace(/^[\d\-\*•\s]+/, '').trim();
+        if (rec.length > 10 && recommendations.length < 3) {
+          recommendations.push(rec);
+        }
+      } else if (cleaned.toLowerCase().includes('riesgo') || 
+                 cleaned.toLowerCase().includes('evitar') ||
+                 cleaned.toLowerCase().includes('problema')) {
+        const risk = cleaned.replace(/^[\d\-\*•\s]+/, '').trim();
+        if (risk.length > 10 && risks.length < 3) {
+          risks.push(risk);
+        }
+      }
+    });
+
+    // Default recommendations if none found
+    if (recommendations.length === 0) {
+      recommendations = [
+        'Usar hook impactante en primeros 3 segundos',
+        'Optimizar duración según audiencia objetivo',
+        'Incluir elementos visuales llamativos'
+      ];
+    } else if (recommendations.length > 3) {
+      recommendations = recommendations.slice(0, 3);
+    }
+
+    // Default risks if none found
+    if (risks.length === 0) {
+      risks = [
+        'Duración podría afectar retención',
+        'Considerar timing de publicación'
+      ];
+    } else if (risks.length > 3) {
+      risks = risks.slice(0, 3);
+    }
+
     return {
       viralScore: Math.min(viralScore, 100),
       expectedViews,
       confidence: 75,
-      recommendations: [
-        "Hook captures attention effectively",
-        "Theme aligns with trending content",
-        "CTA strategy is optimized for engagement"
-      ],
-      risks: [
-        "Duration might affect completion rate",
-        "Consider timing of publication"
-      ]
+      recommendations,
+      risks
     };
+  };
+
+  const findVideoExamples = (recommendation: string): VideoExample[] => {
+    if (!videos || videos.length === 0) return [];
+
+    // Extract keywords from recommendation
+    const keywords = recommendation.toLowerCase().split(' ')
+      .filter(word => word.length > 3 && !['para', 'con', 'por', 'una', 'del', 'que', 'los', 'las'].includes(word));
+
+    // Find videos that match keywords in title or hook
+    const matchingVideos = videos.filter(video => {
+      const searchText = `${video.title || ''} ${video.hook || ''}`.toLowerCase();
+      return keywords.some(keyword => searchText.includes(keyword));
+    });
+
+    // Calculate engagement rate and sort by performance
+    const videosWithER = matchingVideos.map(video => {
+      const views = video.views || 0;
+      const engagement = (video.likes || 0) + (video.comments || 0) + (video.shares || 0);
+      const engagement_rate = views > 0 ? (engagement / views) * 100 : 0;
+
+      return {
+        id: video.id,
+        title: video.title || 'Sin título',
+        published_date: video.published_date,
+        engagement_rate,
+        video_url: video.video_url,
+        performance_score: video.performance_score || engagement_rate
+      };
+    }).sort((a, b) => b.performance_score - a.performance_score);
+
+    return videosWithER.slice(0, 3);
   };
 
   const getScoreColor = (score: number) => {
@@ -272,22 +354,59 @@ export const ViralPotentialAnalyzer = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Recommendations */}
+              <div className="space-y-4">
                 <h4 className="flex items-center gap-2 text-sm font-medium text-text-primary">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  Recommendations
+                  Recomendaciones
                 </h4>
-                <ul className="space-y-1">
+                <div className="space-y-3">
                   {prediction.recommendations.map((rec, index) => (
-                    <li key={index} className="text-sm text-text-secondary flex items-start gap-2">
-                      <span className="text-green-400 text-xs mt-1">•</span>
-                      {rec}
-                    </li>
+                    <div key={index} className="space-y-2">
+                      <div className="flex items-start gap-3 p-3 bg-muted/5 rounded-lg">
+                        <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-text-primary">{rec}</span>
+                      </div>
+                      
+                      {/* Examples for this recommendation */}
+                      <div className="ml-7">
+                        {(() => {
+                          const examples = findVideoExamples(rec);
+                          return examples.length > 0 ? (
+                            <div className="space-y-1">
+                              <p className="text-xs text-text-muted mb-1">Ejemplos:</p>
+                              {examples.slice(0, 2).map((example, exIndex) => (
+                                <div key={exIndex} className="flex items-center justify-between p-2 bg-card rounded border border-border/50">
+                                  <div className="flex-1 min-w-0">
+                                    <h5 className="text-xs font-medium text-text-primary truncate">
+                                      {example.title.length > 30 ? example.title.substring(0, 30) + '...' : example.title}
+                                    </h5>
+                                    <span className="text-xs text-green-400 font-medium">
+                                      {example.engagement_rate.toFixed(1)}% ER
+                                    </span>
+                                  </div>
+                                  {example.video_url ? (
+                                    <ExternalLink className="w-3 h-3 text-primary ml-1" />
+                                  ) : (
+                                    <Play className="w-3 h-3 text-text-muted ml-1" />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-text-muted italic">
+                              Sube más videos para ver ejemplos
+                            </p>
+                          );
+                        })()}
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
 
+              {/* Risks */}
               <div className="space-y-2">
                 <h4 className="flex items-center gap-2 text-sm font-medium text-text-primary">
                   <AlertTriangle className="w-4 h-4 text-orange-400" />
