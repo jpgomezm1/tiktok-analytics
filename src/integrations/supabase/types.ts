@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      brain_queries_log: {
+        Row: {
+          created_at: string | null
+          id: string
+          latency_ms: number | null
+          query: string
+          top_k: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          latency_ms?: number | null
+          query: string
+          top_k: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          latency_ms?: number | null
+          query?: string
+          top_k?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      followers_history: {
+        Row: {
+          created_at: string | null
+          entry_date: string
+          followers_count: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entry_date: string
+          followers_count: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entry_date?: string
+          followers_count?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       growth_insights: {
         Row: {
           affected_video_ids: string[] | null
@@ -86,12 +137,109 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_views: {
+        Row: {
+          created_at: string | null
+          filters: Json
+          id: string
+          name: string
+          normalize_by_1k: boolean | null
+          sort_by: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          filters: Json
+          id?: string
+          name: string
+          normalize_by_1k?: boolean | null
+          sort_by: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          filters?: Json
+          id?: string
+          name?: string
+          normalize_by_1k?: boolean | null
+          sort_by?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tiktok_brain_vectors: {
+        Row: {
+          content: string
+          content_type: string
+          created_at: string | null
+          duration_seconds: number | null
+          embedding: string
+          f_per_1k: number | null
+          for_you_pct: number | null
+          id: string
+          published_date: string | null
+          retention_pct: number | null
+          saves_per_1k: number | null
+          user_id: string
+          video_id: string
+          video_type: string | null
+          views: number | null
+        }
+        Insert: {
+          content: string
+          content_type: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          embedding: string
+          f_per_1k?: number | null
+          for_you_pct?: number | null
+          id?: string
+          published_date?: string | null
+          retention_pct?: number | null
+          saves_per_1k?: number | null
+          user_id: string
+          video_id: string
+          video_type?: string | null
+          views?: number | null
+        }
+        Update: {
+          content?: string
+          content_type?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          embedding?: string
+          f_per_1k?: number | null
+          for_you_pct?: number | null
+          id?: string
+          published_date?: string | null
+          retention_pct?: number | null
+          saves_per_1k?: number | null
+          user_id?: string
+          video_id?: string
+          video_type?: string | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tiktok_brain_vectors_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       videos: {
         Row: {
           avg_time_watched: number | null
           comments: number | null
           created_at: string | null
+          cta_type: string | null
           duration_seconds: number | null
+          editing_style: string | null
           engagement_rate: number | null
           external_link: string | null
           full_video_watch_rate: number | null
@@ -116,6 +264,7 @@ export type Database = {
           traffic_sound: number | null
           updated_at: string | null
           user_id: string
+          video_theme: string | null
           video_type: string | null
           video_url: string | null
           views: number | null
@@ -124,7 +273,9 @@ export type Database = {
           avg_time_watched?: number | null
           comments?: number | null
           created_at?: string | null
+          cta_type?: string | null
           duration_seconds?: number | null
+          editing_style?: string | null
           engagement_rate?: number | null
           external_link?: string | null
           full_video_watch_rate?: number | null
@@ -149,6 +300,7 @@ export type Database = {
           traffic_sound?: number | null
           updated_at?: string | null
           user_id: string
+          video_theme?: string | null
           video_type?: string | null
           video_url?: string | null
           views?: number | null
@@ -157,7 +309,9 @@ export type Database = {
           avg_time_watched?: number | null
           comments?: number | null
           created_at?: string | null
+          cta_type?: string | null
           duration_seconds?: number | null
+          editing_style?: string | null
           engagement_rate?: number | null
           external_link?: string | null
           full_video_watch_rate?: number | null
@@ -182,6 +336,7 @@ export type Database = {
           traffic_sound?: number | null
           updated_at?: string | null
           user_id?: string
+          video_theme?: string | null
           video_type?: string | null
           video_url?: string | null
           views?: number | null
@@ -193,7 +348,98 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
+      }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
