@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { AnalyticsEngine } from '@/utils/analyticsEngine';
 import { useMemo } from 'react';
 import { TrendingUp, Eye, Heart, MessageCircle, Brain, Lightbulb, Target, DollarSign, BarChart3, Sparkles, Calendar, Users, BookmarkPlus, ArrowUp, ArrowDown } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
 const Analytics = () => {
   const { videos, analytics, loading } = useVideos();
@@ -177,6 +177,116 @@ const Analytics = () => {
 
     return { repeat: repeat.slice(0, 3), avoid: avoid.slice(0, 3) };
   }, [insights, patterns]);
+
+  // Calculate engagement breakdown data
+  const engagementBreakdownData = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const dailyData = new Map();
+    
+    // Initialize all 30 days with 0 values
+    for (let i = 0; i < 30; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      dailyData.set(dateStr, { 
+        date: dateStr, 
+        likesPer1K: 0, 
+        commentsPer1K: 0, 
+        sharesPer1K: 0, 
+        savesPer1K: 0,
+        totalLikes: 0,
+        totalComments: 0,
+        totalShares: 0,
+        totalSaves: 0,
+        totalViews: 0
+      });
+    }
+
+    // Aggregate engagement data by day
+    videos.forEach(video => {
+      const videoDate = new Date(video.published_date);
+      if (videoDate >= thirtyDaysAgo) {
+        const dateStr = videoDate.toISOString().split('T')[0];
+        if (dailyData.has(dateStr)) {
+          const dayData = dailyData.get(dateStr);
+          const views = video.views || 0;
+          
+          if (views > 0) {
+            dayData.totalLikes += video.likes || 0;
+            dayData.totalComments += video.comments || 0;
+            dayData.totalShares += video.shares || 0;
+            dayData.totalSaves += video.saves || 0;
+            dayData.totalViews += views;
+          }
+        }
+      }
+    });
+
+    // Calculate per 1K metrics
+    dailyData.forEach((dayData) => {
+      if (dayData.totalViews > 0) {
+        dayData.likesPer1K = (dayData.totalLikes / dayData.totalViews) * 1000;
+        dayData.commentsPer1K = (dayData.totalComments / dayData.totalViews) * 1000;
+        dayData.sharesPer1K = (dayData.totalShares / dayData.totalViews) * 1000;
+        dayData.savesPer1K = (dayData.totalSaves / dayData.totalViews) * 1000;
+      }
+    });
+
+    return Array.from(dailyData.values())
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .filter(d => d.totalViews > 0) // Only show days with data
+      .map(d => ({
+        date: new Date(d.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }),
+        likesPer1K: Number(d.likesPer1K.toFixed(1)),
+        commentsPer1K: Number(d.commentsPer1K.toFixed(1)),
+        sharesPer1K: Number(d.sharesPer1K.toFixed(1)),
+        savesPer1K: Number(d.savesPer1K.toFixed(1))
+      }));
+  }, [videos]);
+
+  // Calculate traffic mix data
+  const trafficMixData = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const last30DaysVideos = videos.filter(video => {
+      const videoDate = new Date(video.published_date);
+      return videoDate >= thirtyDaysAgo;
+    });
+
+    const trafficSums = {
+      forYou: 0,
+      followers: 0,
+      hashtag: 0,
+      sound: 0,
+      profile: 0,
+      search: 0
+    };
+
+    last30DaysVideos.forEach(video => {
+      trafficSums.forYou += video.traffic_for_you || 0;
+      trafficSums.followers += video.traffic_follow || 0;
+      trafficSums.hashtag += video.traffic_hashtag || 0;
+      trafficSums.sound += video.traffic_sound || 0;
+      trafficSums.profile += video.traffic_profile || 0;
+      trafficSums.search += video.traffic_search || 0;
+    });
+
+    const total = Object.values(trafficSums).reduce((sum, val) => sum + val, 0);
+
+    if (total === 0) return [];
+
+    return [
+      { name: 'For You', value: trafficSums.forYou, color: '#8B5CF6' },
+      { name: 'Followers', value: trafficSums.followers, color: '#3B82F6' },
+      { name: 'Hashtag', value: trafficSums.hashtag, color: '#10B981' },
+      { name: 'Sound', value: trafficSums.sound, color: '#F59E0B' },
+      { name: 'Profile', value: trafficSums.profile, color: '#06B6D4' },
+      { name: 'Search', value: trafficSums.search, color: '#EAB308' }
+    ].filter(item => item.value > 0);
+  }, [videos]);
 
   return (
     <div className="p-6 space-y-6">
@@ -379,6 +489,200 @@ const Analytics = () => {
                     </Card>
                   )}
                 </div>
+              </div>
+            </section>
+
+            {/* Engagement Breakdown */}
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <Heart className="w-5 h-5 text-red-400" />
+                <h2 className="text-xl font-semibold text-text-primary">Engagement Breakdown (últimos 30 días)</h2>
+              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-text-primary text-base">Interacciones por 1K Views</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {engagementBreakdownData.length > 0 ? (
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={engagementBreakdownData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis 
+                            dataKey="date" 
+                            stroke="hsl(var(--text-muted))"
+                            fontSize={12}
+                          />
+                          <YAxis 
+                            stroke="hsl(var(--text-muted))"
+                            fontSize={12}
+                            label={{ value: 'Por 1K Views', angle: -90, position: 'insideLeft' }}
+                          />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px',
+                              color: 'hsl(var(--text-primary))'
+                            }}
+                            formatter={(value, name) => {
+                              const nameMap = {
+                                likesPer1K: 'Likes',
+                                commentsPer1K: 'Comentarios',
+                                sharesPer1K: 'Compartidos',
+                                savesPer1K: 'Guardados'
+                              };
+                              return [`${value}/1K`, nameMap[name] || name];
+                            }}
+                          />
+                          <Legend 
+                            formatter={(value) => {
+                              const nameMap = {
+                                likesPer1K: 'Likes',
+                                commentsPer1K: 'Comentarios',
+                                sharesPer1K: 'Compartidos',
+                                savesPer1K: 'Guardados'
+                              };
+                              return nameMap[value] || value;
+                            }}
+                          />
+                          <Bar 
+                            dataKey="likesPer1K" 
+                            stackId="engagement"
+                            fill="#EF4444" 
+                            name="likesPer1K"
+                          />
+                          <Bar 
+                            dataKey="commentsPer1K" 
+                            stackId="engagement"
+                            fill="#3B82F6" 
+                            name="commentsPer1K"
+                          />
+                          <Bar 
+                            dataKey="sharesPer1K" 
+                            stackId="engagement"
+                            fill="#10B981" 
+                            name="sharesPer1K"
+                          />
+                          <Bar 
+                            dataKey="savesPer1K" 
+                            stackId="engagement"
+                            fill="#F59E0B" 
+                            name="savesPer1K"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="h-80 flex items-center justify-center">
+                      <div className="text-center">
+                        <BarChart3 className="w-16 h-16 text-text-muted mx-auto mb-4" />
+                        <p className="text-text-secondary">No hay datos en los últimos 30 días</p>
+                        <p className="text-sm text-text-muted mt-1">Publica videos para ver el breakdown de engagement</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+
+            {/* Traffic Mix */}
+            <section>
+              <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+                <div className="lg:col-span-1">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Target className="w-5 h-5 text-green-400" />
+                    <h2 className="text-xl font-semibold text-text-primary">Traffic Mix (últimos 30 días)</h2>
+                  </div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-text-primary text-base">Fuentes de Tráfico</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {trafficMixData.length > 0 ? (
+                        <div className="h-80">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={trafficMixData}
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={100}
+                                innerRadius={40}
+                                fill="#8884d8"
+                                dataKey="value"
+                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+                                labelLine={false}
+                              >
+                                {trafficMixData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip 
+                                contentStyle={{
+                                  backgroundColor: 'hsl(var(--card))',
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '8px',
+                                  color: 'hsl(var(--text-primary))'
+                                }}
+                                formatter={(value, name) => [
+                                  value.toLocaleString(),
+                                  name
+                                ]}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <div className="h-80 flex items-center justify-center">
+                          <div className="text-center">
+                            <Target className="w-16 h-16 text-text-muted mx-auto mb-4" />
+                            <p className="text-text-secondary">No hay datos en los últimos 30 días</p>
+                            <p className="text-sm text-text-muted mt-1">Publica videos para ver las fuentes de tráfico</p>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                {/* Legend Card for Traffic Mix */}
+                {trafficMixData.length > 0 && (
+                  <div className="lg:col-span-1">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-5 h-5"></div>
+                      <h2 className="text-xl font-semibold text-transparent">.</h2>
+                    </div>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-text-primary text-base">Detalle por Fuente</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {trafficMixData.map((item, index) => {
+                            const total = trafficMixData.reduce((sum, d) => sum + d.value, 0);
+                            const percentage = ((item.value / total) * 100).toFixed(1);
+                            return (
+                              <div key={index} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-3 h-3 rounded-full"
+                                    style={{ backgroundColor: item.color }}
+                                  ></div>
+                                  <span className="text-sm text-text-secondary">{item.name}</span>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-sm font-medium text-text-primary">{item.value.toLocaleString()}</div>
+                                  <div className="text-xs text-text-muted">{percentage}%</div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
               </div>
             </section>
 
