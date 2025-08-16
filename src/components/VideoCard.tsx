@@ -10,16 +10,51 @@ interface VideoCardProps {
 }
 
 export const VideoCard = ({ video, className }: VideoCardProps) => {
-  const getPerformanceBadge = (score?: number) => {
-    if (!score) return { label: 'N/A', variant: 'secondary' as const };
+  const getPerformanceChip = (score?: number) => {
+    if (!score) return { 
+      emoji: '❓', 
+      label: 'N/A', 
+      bgColor: 'bg-muted', 
+      textColor: 'text-text-muted' 
+    };
     
-    if (score >= 8) return { label: 'Viral', variant: 'destructive' as const };
-    if (score >= 5) return { label: 'Good', variant: 'default' as const };
-    if (score >= 2) return { label: 'Average', variant: 'secondary' as const };
-    return { label: 'Poor', variant: 'outline' as const };
+    if (score >= 8.0) return { 
+      emoji: '🔥', 
+      label: 'Viral', 
+      bgColor: 'bg-purple-600/20', 
+      textColor: 'text-purple-400' 
+    };
+    if (score >= 6.0) return { 
+      emoji: '✅', 
+      label: 'Bueno', 
+      bgColor: 'bg-green-600/20', 
+      textColor: 'text-green-400' 
+    };
+    if (score >= 4.0) return { 
+      emoji: '🔸', 
+      label: 'Medio', 
+      bgColor: 'bg-orange-600/20', 
+      textColor: 'text-orange-400' 
+    };
+    return { 
+      emoji: '❌', 
+      label: 'Bajo', 
+      bgColor: 'bg-red-600/20', 
+      textColor: 'text-red-400' 
+    };
   };
 
-  const performance = getPerformanceBadge(video.performance_score);
+  const performanceChip = getPerformanceChip(video.performance_score);
+  
+  // Calculate derived metrics
+  const views = video.views || 0;
+  const saves = video.saves || 0;
+  const likes = video.likes || 0;
+  const comments = video.comments || 0;
+  const shares = video.shares || 0;
+  
+  const savesPer1K = views > 0 ? (saves / views) * 1000 : 0;
+  const engagementRate = views > 0 ? ((likes + comments + shares) / views) * 100 : 0;
   
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -52,9 +87,14 @@ export const VideoCard = ({ video, className }: VideoCardProps) => {
               <h3 className="text-sm font-medium text-text-primary truncate group-hover:text-purple-light transition-colors">
                 {video.title}
               </h3>
-              <Badge variant={performance.variant} className="flex-shrink-0 text-xs">
-                {performance.label}
-              </Badge>
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0",
+                performanceChip.bgColor,
+                performanceChip.textColor
+              )}>
+                <span>{performanceChip.emoji}</span>
+                <span>{performanceChip.label}</span>
+              </div>
             </div>
 
             {video.hook && (
@@ -83,14 +123,17 @@ export const VideoCard = ({ video, className }: VideoCardProps) => {
               </div>
             </div>
 
-            {/* Engagement Rate */}
-            {video.engagement_rate && (
-              <div className="mt-2 pt-2 border-t border-border">
-                <div className="text-xs text-text-muted">
-                  Engagement: <span className="text-purple-light font-medium">{video.engagement_rate.toFixed(1)}%</span>
+            {/* Enhanced Metrics */}
+            <div className="mt-2 pt-2 border-t border-border">
+              <div className="grid grid-cols-2 gap-1 text-xs text-text-muted">
+                <div>
+                  ER: <span className="text-purple-light font-medium">{engagementRate.toFixed(1)}%</span>
+                </div>
+                <div>
+                  Saves/1K: <span className="text-blue-400 font-medium">{savesPer1K.toFixed(1)}</span>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </CardContent>
