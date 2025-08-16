@@ -39,6 +39,7 @@ const Videos = () => {
       topRetention: false,
       topSaves: false,
       highForYou: false,
+      topF1k: false,
       highVelocity: false
     },
     search: ''
@@ -274,18 +275,19 @@ const Videos = () => {
             </p>
             <Button 
               variant="outline" 
-              onClick={() => setFilters({
-                dateRange: { start: null, end: null, preset: null },
-                duration: [],
-                videoType: undefined,
-                signals: {
-                  topRetention: false,
-                  topSaves: false,
-                  highForYou: false,
-                  highVelocity: false
-                },
-                search: ''
-              })}
+            onClick={() => setFilters({
+              dateRange: { start: null, end: null, preset: null },
+              duration: [],
+              videoType: undefined,
+              signals: {
+                topRetention: false,
+                topSaves: false,
+                highForYou: false,
+                topF1k: false,
+                highVelocity: false
+              },
+              search: ''
+            })}
             >
               Limpiar filtros
             </Button>

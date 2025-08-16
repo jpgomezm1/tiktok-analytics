@@ -153,6 +153,24 @@ export const VideoExplorerCard = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+
+            {/* F/1k */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge 
+                    variant="outline" 
+                    className="text-xs gap-1 bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
+                  >
+                    F/1k {formatMetric(video.f_per_1k, 'decimal')}
+                    <span className="text-text-muted">| p{video.f_per_1k_percentile}</span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Seguidores por 1K vistas: new_followers / views × 1000</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
 
           <div className="flex flex-wrap gap-1">

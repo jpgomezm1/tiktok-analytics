@@ -63,6 +63,7 @@ export const VideoFiltersBar = ({
         topRetention: false,
         topSaves: false,
         highForYou: false,
+        topF1k: false,
         highVelocity: false
       },
       search: ''
@@ -245,6 +246,17 @@ export const VideoFiltersBar = ({
                 />
                 <label htmlFor="highForYou" className="text-sm">
                   % For You alto
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="topF1k"
+                  checked={filters.signals.topF1k}
+                  onCheckedChange={(checked) => updateSignals('topF1k', checked as boolean)}
+                />
+                <label htmlFor="topF1k" className="text-sm">
+                  Top 10% F/1k
                 </label>
               </div>
               

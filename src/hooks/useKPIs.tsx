@@ -17,6 +17,7 @@ export interface VideoAggregation {
   total_comments: number;
   total_shares: number;
   total_saves: number;
+  total_new_followers: number;
   total_traffic_for_you: number;
   total_traffic_profile: number;
   total_traffic_hashtag: number;
@@ -58,7 +59,7 @@ export const useKPIs = () => {
     const { data, error } = await (supabase as any)
       .from('videos')
       .select(`
-        views, likes, comments, shares, saves, 
+        views, likes, comments, shares, saves, new_followers,
         traffic_for_you, traffic_profile, traffic_hashtag, traffic_sound, traffic_search,
         avg_time_watched, duration_seconds, total_time_watched
       `)
@@ -80,6 +81,7 @@ export const useKPIs = () => {
         total_comments: acc.total_comments + (video.comments || 0),
         total_shares: acc.total_shares + (video.shares || 0),
         total_saves: acc.total_saves + (video.saves || 0),
+        total_new_followers: acc.total_new_followers + (video.new_followers || 0),
         total_traffic_for_you: acc.total_traffic_for_you + (video.traffic_for_you || 0),
         total_traffic_profile: acc.total_traffic_profile + (video.traffic_profile || 0),
         total_traffic_hashtag: acc.total_traffic_hashtag + (video.traffic_hashtag || 0),
@@ -90,7 +92,7 @@ export const useKPIs = () => {
         video_count: acc.video_count + 1
       };
     }, {
-      total_views: 0, total_likes: 0, total_comments: 0, total_shares: 0, total_saves: 0,
+      total_views: 0, total_likes: 0, total_comments: 0, total_shares: 0, total_saves: 0, total_new_followers: 0,
       total_traffic_for_you: 0, total_traffic_profile: 0, total_traffic_hashtag: 0,
       total_traffic_sound: 0, total_traffic_search: 0,
       weighted_avg_time: 0, weighted_duration: 0, video_count: 0
@@ -143,6 +145,42 @@ export const useKPIs = () => {
     }));
 
     return { value: currentCount, deltaAbs, deltaPct, spark };
+  };
+
+  const followersYield = async (period: Period): Promise<KPIValue> => {
+    const currentAgg = await getVideoAggregation(period);
+    const days = getDaysFromPeriod(period);
+    
+    // Get previous period for comparison
+    const previousFromDate = new Date();
+    previousFromDate.setDate(previousFromDate.getDate() - (days * 2));
+    const previousToDate = new Date();
+    previousToDate.setDate(previousToDate.getDate() - days);
+
+    const { data: previousData } = await (supabase as any)
+      .from('videos')
+      .select('views, new_followers')
+      .eq('user_id', user.id)
+      .gte('published_date', previousFromDate.toISOString().split('T')[0])
+      .lt('published_date', previousToDate.toISOString().split('T')[0]);
+
+    const previousAgg = (previousData || []).reduce((acc, video) => ({
+      total_views: acc.total_views + (video.views || 0),
+      total_new_followers: acc.total_new_followers + (video.new_followers || 0)
+    }), { total_views: 0, total_new_followers: 0 });
+
+    const value = currentAgg.total_views > 0 
+      ? (currentAgg.total_new_followers / currentAgg.total_views) * 1000 
+      : 0;
+
+    const previousValue = previousAgg.total_views > 0 
+      ? (previousAgg.total_new_followers / previousAgg.total_views) * 1000 
+      : value;
+
+    const deltaAbs = value - previousValue;
+    const deltaPct = previousValue > 0 ? (deltaAbs / previousValue) * 100 : 0;
+
+    return { value, deltaAbs, deltaPct, spark: [] };
   };
 
   const newFollowers = async (period: Period): Promise<KPIValue> => {
@@ -403,6 +441,7 @@ export const useKPIs = () => {
     loading,
     followersNow,
     newFollowers,
+    followersYield,
     retentionAvg,
     savesPer1K,
     forYouShare,
