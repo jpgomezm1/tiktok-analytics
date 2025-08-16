@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Videos from "./pages/Videos";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import VideoDetail from "./pages/VideoDetail";
 import AIGenerate from "./pages/AIGenerate";
 import NotFound from "./pages/NotFound";
 

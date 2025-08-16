@@ -5,7 +5,8 @@ import {
   BarChart3, 
   Settings, 
   LogOut,
-  User
+  User,
+  Sparkles
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,6 +34,11 @@ const menuItems = [
     title: "Videos", 
     url: "/videos", 
     icon: PlayCircle 
+  },
+  { 
+    title: "AI Generate", 
+    url: "/ai-generate", 
+    icon: Sparkles 
   },
   { 
     title: "Analytics", 
