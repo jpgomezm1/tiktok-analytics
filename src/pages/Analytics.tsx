@@ -2,6 +2,8 @@ import { useVideos } from '@/hooks/useVideos';
 import { MetricCard } from '@/components/MetricCard';
 import { InsightCard } from '@/components/InsightCard';
 import { ScoreCard } from '@/components/ScoreCard';
+import { AIContentSuggestions } from '@/components/AIContentSuggestions';
+import { ViralPotentialAnalyzer } from '@/components/ViralPotentialAnalyzer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AnalyticsEngine } from '@/utils/analyticsEngine';
@@ -95,6 +97,18 @@ const Analytics = () => {
                   </CardContent>
                 </Card>
               )}
+            </section>
+
+            {/* AI-Powered Tools */}
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <Brain className="w-5 h-5 text-purple-400" />
+                <h2 className="text-xl font-semibold text-text-primary">AI-Powered Tools</h2>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <AIContentSuggestions />
+                <ViralPotentialAnalyzer />
+              </div>
             </section>
 
             {/* Content Performance Breakdown */}

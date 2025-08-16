@@ -1,1 +1,4 @@
 project_id = "lvdimtiefbjglywokncr"
+
+[functions.ai-content-analysis]
+verify_jwt = true

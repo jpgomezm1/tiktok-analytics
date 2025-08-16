@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Videos from "./pages/Videos";
 import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
 import VideoDetail from "./pages/VideoDetail";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/videos" element={<AppLayout><Videos /></AppLayout>} />
             <Route path="/videos/:id" element={<AppLayout><VideoDetail /></AppLayout>} />
             <Route path="/analytics" element={<AppLayout><Analytics /></AppLayout>} />
+            <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
