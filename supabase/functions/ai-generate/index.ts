@@ -47,7 +47,12 @@ serve(async (req) => {
     }
 
     const responseData = await response.json();
-    const generatedContent = responseData.content[0].text;
+    let generatedContent = responseData.content[0].text;
+    
+    // Clean the content to ensure it's JSON-safe
+    generatedContent = generatedContent.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+    
+    console.log('Generated content preview:', generatedContent.substring(0, 200));
 
     return new Response(JSON.stringify({ 
       success: true,

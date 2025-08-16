@@ -65,11 +65,17 @@ export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorT
       
       if (response.success && response.content) {
         try {
-          // Clean and parse the JSON response
+          // Clean the response content to remove any control characters
           let cleanedContent = response.content.trim();
+          console.log('Original content:', response.content);
           
           // Remove any markdown code block wrappers
           cleanedContent = cleanedContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          
+          // Remove control characters that break JSON parsing
+          cleanedContent = cleanedContent.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+          
+          console.log('Cleaned content:', cleanedContent);
           
           // Try to parse the JSON
           const parsed = JSON.parse(cleanedContent);
@@ -80,9 +86,29 @@ export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorT
             description: "Claude ha creado tu guion estructurado",
           });
         } catch (parseError) {
-          console.error('JSON parsing error:', parseError);
-          console.error('Response content:', response.content);
-          throw new Error('La respuesta de Claude no tiene el formato correcto');
+          console.error('Error parsing JSON:', parseError);
+          console.error('Raw content that failed:', response.content);
+          
+          // Create fallback script from raw content
+          const fallbackScript = {
+            hook: "Error al procesar respuesta",
+            development: response.content.substring(0, 500) + "...",
+            cta: "Intenta generar nuevamente",
+            estimated_duration: "N/A",
+            insights: {
+              duration_recommendation: "Error en el procesamiento",
+              hook_strategy: "Error en el procesamiento", 
+              expected_f1k: "Error en el procesamiento"
+            }
+          };
+          
+          setGeneratedScript(fallbackScript);
+          
+          toast({
+            title: "Error de formato",
+            description: "Claude generó contenido pero no pudimos procesarlo correctamente. Revisa los logs del navegador.",
+            variant: "destructive"
+          });
         }
       } else {
         throw new Error(response.error || 'No se pudo generar el guion');
