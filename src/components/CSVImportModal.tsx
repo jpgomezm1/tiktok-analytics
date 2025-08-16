@@ -54,6 +54,12 @@ const COLUMN_MAPPING: Record<string, string> = {
   'New Followers': 'new_followers',
   'Guion': 'guion',
   'Hook': 'hook',
+  // NEW FIELDS - Theme, CTA, and Editing Style
+  'Theme': 'video_theme',
+  'Tema': 'video_theme',  // Spanish support
+  'CTA': 'cta_type',
+  'Editing Style': 'editing_style',
+  'Estilo de Edicion': 'editing_style',  // Spanish support
 };
 
 export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps) => {
@@ -194,6 +200,12 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
         try {
           const video: any = {};
           
+          // DEBUG: Log raw CSV data for first row
+          if (index === 0) {
+            console.log('Raw CSV columns detected:', Object.keys(row));
+            console.log('Raw first row data:', row);
+          }
+          
           // Apply automatic column mapping
           Object.entries(COLUMN_MAPPING).forEach(([csvColumn, dbField]) => {
             if (row[csvColumn] !== undefined) {
@@ -201,8 +213,23 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
               if (value !== null) {
                 video[dbField] = value;
               }
+              
+              // DEBUG: Log new field mappings
+              if (['video_theme', 'cta_type', 'editing_style'].includes(dbField) && index === 0) {
+                console.log(`Mapped ${csvColumn} → ${dbField}:`, value);
+              }
             }
           });
+
+          // DEBUG: Log processed video data for first row
+          if (index === 0) {
+            console.log('Processed video data:', video);
+            console.log('New fields detected:', {
+              video_theme: video.video_theme,
+              cta_type: video.cta_type,
+              editing_style: video.editing_style
+            });
+          }
 
           // Ensure required fields have defaults
           if (!video.title || video.title.trim() === '') {
@@ -234,6 +261,9 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
         }
       });
 
+      console.log('Total processed videos:', processedVideos.length);
+      console.log('Sample video with new fields:', processedVideos[0]);
+
       // Import videos in batches
       const batchSize = 5;
       for (let i = 0; i < processedVideos.length; i += batchSize) {
@@ -241,13 +271,20 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
         
         try {
           for (const video of batch) {
+            console.log('Sending video to database:', {
+              title: video.title,
+              video_theme: video.video_theme,
+              cta_type: video.cta_type,
+              editing_style: video.editing_style
+            });
             await onImport([video]);
           }
           setImportProgress(Math.min(100, ((i + batch.length) / processedVideos.length) * 100));
         } catch (error) {
+          console.error('Batch import error:', error);
           result.failed += batch.length;
           result.success -= batch.length;
-          result.errors.push(`Batch ${Math.floor(i / batchSize) + 1}: Import failed`);
+          result.errors.push(`Batch ${Math.floor(i / batchSize) + 1}: Import failed - ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 
@@ -292,6 +329,15 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
     // Ensure title has a value for preview
     if (!mapped.title || mapped.title.trim() === '') {
       mapped.title = `Video ${index + 1}`;
+    }
+    
+    // DEBUG: Log preview data with new fields
+    if (index === 0) {
+      console.log('Preview data with new fields:', {
+        video_theme: mapped.video_theme,
+        cta_type: mapped.cta_type,
+        editing_style: mapped.editing_style
+      });
     }
     
     return mapped;
@@ -356,8 +402,11 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
                   <Badge variant="outline">Date → published_date</Badge>
                   <Badge variant="outline">Image → image_url</Badge>
                   <Badge variant="outline">URL → video_url</Badge>
+                  <Badge variant="outline">Theme → video_theme</Badge>
+                  <Badge variant="outline">CTA → cta_type</Badge>
+                  <Badge variant="outline">Editing Style → editing_style</Badge>
                 </div>
-                <p className="mt-3">The system will automatically detect and map your columns based on their names.</p>
+                <p className="mt-3">The system will automatically detect and map your columns based on their names. Supports both English and Spanish column names.</p>
               </CardContent>
             </Card>
           </div>
@@ -383,6 +432,9 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
                     <TableHead>Views</TableHead>
                     <TableHead>Likes</TableHead>
                     <TableHead>Comments</TableHead>
+                    <TableHead>Theme</TableHead>
+                    <TableHead>CTA</TableHead>
+                    <TableHead>Editing Style</TableHead>
                     <TableHead>Published Date</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -395,6 +447,21 @@ export const CSVImportModal = ({ open, onClose, onImport }: CSVImportModalProps)
                       <TableCell>{(row.views || 0).toLocaleString()}</TableCell>
                       <TableCell>{(row.likes || 0).toLocaleString()}</TableCell>
                       <TableCell>{(row.comments || 0).toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {row.video_theme || 'N/A'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {row.cta_type || 'N/A'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {row.editing_style || 'N/A'}
+                        </Badge>
+                      </TableCell>
                       <TableCell>{row.published_date || 'Today'}</TableCell>
                     </TableRow>
                   ))}
