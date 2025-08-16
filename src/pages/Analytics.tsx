@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AnalyticsEngine } from '@/utils/analyticsEngine';
 import { useMemo } from 'react';
-import { TrendingUp, Eye, Heart, MessageCircle, Brain, Lightbulb, Target, DollarSign, BarChart3, Sparkles, Calendar, Users, BookmarkPlus, ArrowUp, ArrowDown } from 'lucide-react';
+import { TrendingUp, Eye, Heart, MessageCircle, Brain, Lightbulb, Target, DollarSign, BarChart3, Sparkles, Calendar, Users, BookmarkPlus, ArrowUp, ArrowDown, ExternalLink } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
 const Analytics = () => {
@@ -286,6 +286,111 @@ const Analytics = () => {
       { name: 'Profile', value: trafficSums.profile, color: '#06B6D4' },
       { name: 'Search', value: trafficSums.search, color: '#EAB308' }
     ].filter(item => item.value > 0);
+  }, [videos]);
+
+  // Calculate top vs bottom performers
+  const topBottomComparison = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const last30DaysVideos = videos.filter(video => {
+      const videoDate = new Date(video.published_date);
+      return videoDate >= thirtyDaysAgo && (video.views || 0) > 0;
+    });
+
+    if (last30DaysVideos.length < 2) {
+      return null;
+    }
+
+    // Sort by performance_score (assuming it exists, or use a simple metric)
+    const sortedVideos = [...last30DaysVideos].sort((a, b) => {
+      const scoreA = a.performance_score || ((a.likes || 0) + (a.comments || 0) + (a.shares || 0)) / Math.max(a.views || 1, 1);
+      const scoreB = b.performance_score || ((b.likes || 0) + (b.comments || 0) + (b.shares || 0)) / Math.max(b.views || 1, 1);
+      return scoreB - scoreA;
+    });
+
+    const top5 = sortedVideos.slice(0, Math.min(5, Math.floor(sortedVideos.length / 2)));
+    const bottom5 = sortedVideos.slice(-Math.min(5, Math.floor(sortedVideos.length / 2)));
+
+    const calculateGroupMetrics = (videoGroup) => {
+      if (videoGroup.length === 0) return { duration: 0, er: 0, savesPer1K: 0, sharesPer1K: 0, forYouPercent: 0 };
+      
+      const totals = videoGroup.reduce((acc, video) => {
+        const views = video.views || 0;
+        return {
+          duration: acc.duration + (video.duration_seconds || 0),
+          likes: acc.likes + (video.likes || 0),
+          comments: acc.comments + (video.comments || 0),
+          shares: acc.shares + (video.shares || 0),
+          saves: acc.saves + (video.saves || 0),
+          views: acc.views + views,
+          forYou: acc.forYou + (video.traffic_for_you || 0)
+        };
+      }, { duration: 0, likes: 0, comments: 0, shares: 0, saves: 0, views: 0, forYou: 0 });
+
+      return {
+        duration: totals.duration / videoGroup.length,
+        er: totals.views > 0 ? ((totals.likes + totals.comments + totals.shares) / totals.views) * 100 : 0,
+        savesPer1K: totals.views > 0 ? (totals.saves / totals.views) * 1000 : 0,
+        sharesPer1K: totals.views > 0 ? (totals.shares / totals.views) * 1000 : 0,
+        forYouPercent: totals.views > 0 ? (totals.forYou / totals.views) * 100 : 0
+      };
+    };
+
+    const topMetrics = calculateGroupMetrics(top5);
+    const bottomMetrics = calculateGroupMetrics(bottom5);
+
+    return {
+      top: topMetrics,
+      bottom: bottomMetrics,
+      topCount: top5.length,
+      bottomCount: bottom5.length
+    };
+  }, [videos]);
+
+  // Calculate quick wins
+  const quickWins = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const candidates = videos.filter(video => {
+      const videoDate = new Date(video.published_date);
+      const views = video.views || 0;
+      const likes = video.likes || 0;
+      const comments = video.comments || 0;
+      const shares = video.shares || 0;
+      
+      if (views === 0) return false;
+      
+      const er = ((likes + comments + shares) / views) * 100;
+      
+      return videoDate >= thirtyDaysAgo && views < 10000 && er >= 5;
+    });
+
+    return candidates
+      .map(video => {
+        const views = video.views || 0;
+        const likes = video.likes || 0;
+        const comments = video.comments || 0;
+        const shares = video.shares || 0;
+        const saves = video.saves || 0;
+        
+        const er = views > 0 ? ((likes + comments + shares) / views) * 100 : 0;
+        const savesPer1K = views > 0 ? (saves / views) * 1000 : 0;
+        
+        return {
+          ...video,
+          er,
+          savesPer1K
+        };
+      })
+      .sort((a, b) => {
+        if (Math.abs(a.er - b.er) < 0.1) {
+          return b.savesPer1K - a.savesPer1K;
+        }
+        return b.er - a.er;
+      })
+      .slice(0, 5);
   }, [videos]);
 
   return (
@@ -683,6 +788,150 @@ const Analytics = () => {
                     </Card>
                   </div>
                 )}
+              </div>
+            </section>
+
+            {/* Top vs Bottom Performers & Quick Wins */}
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="w-5 h-5 text-blue-400" />
+                <h2 className="text-xl font-semibold text-text-primary">Performance Analysis</h2>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+                {/* Top vs Bottom Performers */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-text-primary text-base">Top vs Bottom Performers (últimos 30 días)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {topBottomComparison ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-border">
+                              <th className="text-left py-2 text-text-secondary font-medium">Métrica</th>
+                              <th className="text-right py-2 text-text-secondary font-medium">Top {topBottomComparison.topCount}</th>
+                              <th className="text-right py-2 text-text-secondary font-medium">Bottom {topBottomComparison.bottomCount}</th>
+                              <th className="text-right py-2 text-text-secondary font-medium">Delta</th>
+                            </tr>
+                          </thead>
+                          <tbody className="space-y-2">
+                            <tr className="border-b border-border/50">
+                              <td className="py-3 text-text-primary">Duración promedio (seg)</td>
+                              <td className="text-right py-3 text-text-primary font-medium">{topBottomComparison.top.duration.toFixed(0)}</td>
+                              <td className="text-right py-3 text-text-primary font-medium">{topBottomComparison.bottom.duration.toFixed(0)}</td>
+                              <td className="text-right py-3">
+                                <span className={`font-medium ${(topBottomComparison.top.duration - topBottomComparison.bottom.duration) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {(topBottomComparison.top.duration - topBottomComparison.bottom.duration) >= 0 ? '↑' : '↓'} 
+                                  {Math.abs(topBottomComparison.top.duration - topBottomComparison.bottom.duration).toFixed(0)}
+                                </span>
+                              </td>
+                            </tr>
+                            <tr className="border-b border-border/50">
+                              <td className="py-3 text-text-primary">Engagement Rate (%)</td>
+                              <td className="text-right py-3 text-text-primary font-medium">{topBottomComparison.top.er.toFixed(1)}</td>
+                              <td className="text-right py-3 text-text-primary font-medium">{topBottomComparison.bottom.er.toFixed(1)}</td>
+                              <td className="text-right py-3">
+                                <span className={`font-medium ${(topBottomComparison.top.er - topBottomComparison.bottom.er) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {(topBottomComparison.top.er - topBottomComparison.bottom.er) >= 0 ? '↑' : '↓'} 
+                                  {Math.abs(topBottomComparison.top.er - topBottomComparison.bottom.er).toFixed(1)}
+                                </span>
+                              </td>
+                            </tr>
+                            <tr className="border-b border-border/50">
+                              <td className="py-3 text-text-primary">Saves por 1K views</td>
+                              <td className="text-right py-3 text-text-primary font-medium">{topBottomComparison.top.savesPer1K.toFixed(1)}</td>
+                              <td className="text-right py-3 text-text-primary font-medium">{topBottomComparison.bottom.savesPer1K.toFixed(1)}</td>
+                              <td className="text-right py-3">
+                                <span className={`font-medium ${(topBottomComparison.top.savesPer1K - topBottomComparison.bottom.savesPer1K) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {(topBottomComparison.top.savesPer1K - topBottomComparison.bottom.savesPer1K) >= 0 ? '↑' : '↓'} 
+                                  {Math.abs(topBottomComparison.top.savesPer1K - topBottomComparison.bottom.savesPer1K).toFixed(1)}
+                                </span>
+                              </td>
+                            </tr>
+                            <tr className="border-b border-border/50">
+                              <td className="py-3 text-text-primary">Shares por 1K views</td>
+                              <td className="text-right py-3 text-text-primary font-medium">{topBottomComparison.top.sharesPer1K.toFixed(1)}</td>
+                              <td className="text-right py-3 text-text-primary font-medium">{topBottomComparison.bottom.sharesPer1K.toFixed(1)}</td>
+                              <td className="text-right py-3">
+                                <span className={`font-medium ${(topBottomComparison.top.sharesPer1K - topBottomComparison.bottom.sharesPer1K) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {(topBottomComparison.top.sharesPer1K - topBottomComparison.bottom.sharesPer1K) >= 0 ? '↑' : '↓'} 
+                                  {Math.abs(topBottomComparison.top.sharesPer1K - topBottomComparison.bottom.sharesPer1K).toFixed(1)}
+                                </span>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="py-3 text-text-primary">% For You</td>
+                              <td className="text-right py-3 text-text-primary font-medium">{topBottomComparison.top.forYouPercent.toFixed(1)}</td>
+                              <td className="text-right py-3 text-text-primary font-medium">{topBottomComparison.bottom.forYouPercent.toFixed(1)}</td>
+                              <td className="text-right py-3">
+                                <span className={`font-medium ${(topBottomComparison.top.forYouPercent - topBottomComparison.bottom.forYouPercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {(topBottomComparison.top.forYouPercent - topBottomComparison.bottom.forYouPercent) >= 0 ? '↑' : '↓'} 
+                                  {Math.abs(topBottomComparison.top.forYouPercent - topBottomComparison.bottom.forYouPercent).toFixed(1)}
+                                </span>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <BarChart3 className="w-16 h-16 text-text-muted mx-auto mb-4" />
+                        <p className="text-text-secondary">No hay datos suficientes para comparación</p>
+                        <p className="text-sm text-text-muted mt-1">Se necesitan al menos 2 videos en los últimos 30 días</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Quick Wins */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-text-primary text-base flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4 text-yellow-400" />
+                      Quick Wins
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {quickWins.length > 0 ? (
+                      <div className="space-y-3">
+                        <p className="text-xs text-text-muted mb-4">Videos con pocas views pero alto engagement</p>
+                        {quickWins.map((video, index) => (
+                          <div key={video.id || index} className="p-3 rounded-lg bg-muted/20 border border-border/50">
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-medium text-text-primary truncate">
+                                {video.title ? (video.title.length > 40 ? video.title.substring(0, 40) + '...' : video.title) : 'Sin título'}
+                              </h4>
+                              <div className="text-xs text-text-muted">
+                                {new Date(video.published_date).toLocaleDateString('es-ES')}
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                  <div className="text-xs text-text-secondary">
+                                    <span className="font-medium text-green-400">{video.er.toFixed(1)}%</span> ER
+                                  </div>
+                                  <div className="text-xs text-text-secondary">
+                                    <span className="font-medium text-blue-400">{video.savesPer1K.toFixed(1)}</span> saves/1K
+                                  </div>
+                                </div>
+                                <button className="text-xs px-2 py-1 rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors flex items-center gap-1">
+                                  <ExternalLink className="w-3 h-3" />
+                                  Ver
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Lightbulb className="w-16 h-16 text-text-muted mx-auto mb-4" />
+                        <p className="text-text-secondary">No hay Quick Wins</p>
+                        <p className="text-sm text-text-muted mt-1">Videos con &lt;10K views y ≥5% ER</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             </section>
 
