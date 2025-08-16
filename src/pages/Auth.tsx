@@ -7,11 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useT } from '@/i18n';
 import { TrendingUp, BarChart3, Users, Eye } from 'lucide-react';
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
   const { toast } = useToast();
+  const t = useT;
   const [loading, setLoading] = useState(false);
 
   // Redirect if already authenticated
@@ -31,14 +33,14 @@ const Auth = () => {
     
     if (error) {
       toast({
-        title: 'Sign in failed',
+        title: t('auth.signInFailed'),
         description: error.message,
         variant: 'destructive'
       });
     } else {
       toast({
-        title: 'Welcome back!',
-        description: 'Successfully signed in to your analytics dashboard.'
+        title: t('auth.welcomeBack'),
+        description: t('auth.successSignIn')
       });
     }
     
@@ -58,14 +60,14 @@ const Auth = () => {
     
     if (error) {
       toast({
-        title: 'Sign up failed',
+        title: t('auth.signUpFailed'),
         description: error.message,
         variant: 'destructive'
       });
     } else {
       toast({
-        title: 'Account created!',
-        description: 'Check your email to verify your account.'
+        title: t('auth.accountCreated'),
+        description: t('auth.checkEmail')
       });
     }
     
@@ -83,7 +85,7 @@ const Auth = () => {
               <span className="bg-gradient-primary bg-clip-text text-transparent"> Analytics</span>
             </h1>
             <p className="text-xl text-text-secondary max-w-lg mx-auto">
-              Transform your TikTok data into actionable insights. Discover what works, optimize your content, and scale your success.
+              Transforma tus datos de TikTok en insights accionables. Descubre qué funciona, optimiza tu contenido y escala tu éxito.
             </p>
           </div>
           
@@ -92,25 +94,25 @@ const Auth = () => {
               <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto">
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
-              <p className="text-text-secondary text-sm">Growth Tracking</p>
+              <p className="text-text-secondary text-sm">Seguimiento de crecimiento</p>
             </div>
             <div className="text-center space-y-2">
               <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto">
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
-              <p className="text-text-secondary text-sm">Performance Analytics</p>
+              <p className="text-text-secondary text-sm">Análisis de rendimiento</p>
             </div>
             <div className="text-center space-y-2">
               <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto">
                 <Users className="w-6 h-6 text-white" />
               </div>
-              <p className="text-text-secondary text-sm">Audience Insights</p>
+              <p className="text-text-secondary text-sm">Insights de audiencia</p>
             </div>
             <div className="text-center space-y-2">
               <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto">
                 <Eye className="w-6 h-6 text-white" />
               </div>
-              <p className="text-text-secondary text-sm">Content Optimization</p>
+              <p className="text-text-secondary text-sm">Optimización de contenido</p>
             </div>
           </div>
         </div>
@@ -119,37 +121,37 @@ const Auth = () => {
         <div className="w-full max-w-md mx-auto">
           <Card className="bg-card border-border shadow-card">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-text-primary">Get Started</CardTitle>
+              <CardTitle className="text-2xl text-text-primary">{t('auth.getStarted')}</CardTitle>
               <CardDescription className="text-text-secondary">
-                Sign in to your account or create a new one to start analyzing your TikTok performance
+                {t('auth.signInDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="signin" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="signin">Sign In</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                  <TabsTrigger value="signin">{t('auth.signIn')}</TabsTrigger>
+                  <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="signin">
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="signin-email">Email</Label>
+                      <Label htmlFor="signin-email">{t('auth.email')}</Label>
                       <Input
                         id="signin-email"
                         name="email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder={t('auth.enterEmail')}
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signin-password">Password</Label>
+                      <Label htmlFor="signin-password">{t('auth.password')}</Label>
                       <Input
                         id="signin-password"
                         name="password"
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder={t('auth.enterPassword')}
                         required
                       />
                     </div>
@@ -158,7 +160,7 @@ const Auth = () => {
                       className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
                       disabled={loading}
                     >
-                      {loading ? 'Signing in...' : 'Sign In'}
+                      {loading ? t('auth.signingIn') : t('auth.signIn')}
                     </Button>
                   </form>
                 </TabsContent>
@@ -166,32 +168,32 @@ const Auth = () => {
                 <TabsContent value="signup">
                   <form onSubmit={handleSignUp} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="signup-name">Display Name</Label>
+                      <Label htmlFor="signup-name">{t('auth.displayName')}</Label>
                       <Input
                         id="signup-name"
                         name="displayName"
                         type="text"
-                        placeholder="Your name or brand"
+                        placeholder={t('auth.nameOrBrand')}
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
+                      <Label htmlFor="signup-email">{t('auth.email')}</Label>
                       <Input
                         id="signup-email"
                         name="email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder={t('auth.enterEmail')}
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
+                      <Label htmlFor="signup-password">{t('auth.password')}</Label>
                       <Input
                         id="signup-password"
                         name="password"
                         type="password"
-                        placeholder="Create a password"
+                        placeholder={t('auth.createPassword')}
                         required
                       />
                     </div>
@@ -200,7 +202,7 @@ const Auth = () => {
                       className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
                       disabled={loading}
                     >
-                      {loading ? 'Creating account...' : 'Create Account'}
+                      {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
                     </Button>
                   </form>
                 </TabsContent>
