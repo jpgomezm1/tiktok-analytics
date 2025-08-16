@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Lightbulb, FileText, Download, Heart, RefreshCw } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Lightbulb, FileText, Download, Heart, RefreshCw, Brain } from 'lucide-react';
 import { useAIGenerate } from '@/hooks/useAIGenerate';
 import { HistoricalData } from '@/hooks/useHistoricalData';
 import { useToast } from '@/hooks/use-toast';
@@ -27,13 +28,14 @@ export const IdeasQuickTab = ({ historicalData, hasData }: IdeasQuickTabProps) =
   const [topic, setTopic] = useState('');
   const [ideas, setIdeas] = useState<GeneratedIdea[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [useBrain, setUseBrain] = useState(true);
   
   const { generateIdeas, loading } = useAIGenerate();
   const { toast } = useToast();
 
   const handleGenerate = async () => {
     try {
-      const response = await generateIdeas(count, topic, historicalData || undefined);
+      const response = await generateIdeas(count, topic, historicalData || undefined, useBrain);
       
       if (response.success && response.content) {
         // Parse JSON response
@@ -99,9 +101,11 @@ export const IdeasQuickTab = ({ historicalData, hasData }: IdeasQuickTabProps) =
             Genera Ideas con Claude
           </CardTitle>
           <CardDescription className="text-text-secondary">
-            {hasData 
-              ? 'Claude usará tus datos históricos para generar ideas personalizadas'
-              : 'Claude generará ideas generales de TikTok (importa tus datos para sugerencias personalizadas)'
+            {useBrain 
+              ? 'Claude usará tu TikTok Brain para generar ideas basadas en tus patrones exitosos'
+              : hasData 
+                ? 'Claude usará tus datos históricos para generar ideas personalizadas'
+                : 'Claude generará ideas generales de TikTok'
             }
           </CardDescription>
         </CardHeader>
@@ -132,7 +136,25 @@ export const IdeasQuickTab = ({ historicalData, hasData }: IdeasQuickTabProps) =
             </div>
           </div>
 
-          <Button 
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border">
+            <div className="flex items-center gap-3">
+              <Brain className="w-5 h-5 text-primary" />
+              <div>
+                <p className="font-medium text-text-primary">
+                  Usar mi TikTok Brain
+                </p>
+                <p className="text-sm text-text-muted">
+                  Ideas basadas en tus patrones exitosos reales
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={useBrain}
+              onCheckedChange={setUseBrain}
+            />
+          </div>
+
+          <Button
             onClick={handleGenerate}
             disabled={loading}
             className="w-full bg-gradient-primary hover:opacity-90"
@@ -144,8 +166,8 @@ export const IdeasQuickTab = ({ historicalData, hasData }: IdeasQuickTabProps) =
               </>
             ) : (
               <>
-                <Lightbulb className="w-4 h-4 mr-2" />
-                Generar Ideas con AI (Claude)
+                {useBrain ? <Brain className="w-4 h-4 mr-2" /> : <Lightbulb className="w-4 h-4 mr-2" />}
+                {useBrain ? 'Generar con TikTok Brain' : 'Generar Ideas con AI (Claude)'}
               </>
             )}
           </Button>
@@ -199,8 +221,9 @@ export const IdeasQuickTab = ({ historicalData, hasData }: IdeasQuickTabProps) =
                   
                   <Badge 
                     variant="outline" 
-                    className="text-xs bg-primary/10 border-primary/20 text-primary"
+                    className={`text-xs ${useBrain ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}
                   >
+                    {useBrain && <Brain className="w-3 h-3 mr-1" />}
                     {idea.pattern_used}
                   </Badge>
                   

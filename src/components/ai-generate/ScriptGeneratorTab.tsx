@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { FileText, Download, Copy, RefreshCw } from 'lucide-react';
+import { FileText, Download, Copy, RefreshCw, Brain } from 'lucide-react';
 import { useAIGenerate } from '@/hooks/useAIGenerate';
 import { HistoricalData } from '@/hooks/useHistoricalData';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +31,7 @@ interface GeneratedScript {
 export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorTabProps) => {
   const [vertical, setVertical] = useState('');
   const [description, setDescription] = useState('');
-  const [useHistoricalData, setUseHistoricalData] = useState(hasData);
+  const [useBrain, setUseBrain] = useState(true);
   const [generatedScript, setGeneratedScript] = useState<GeneratedScript | null>(null);
   
   const { generateScript, loading } = useAIGenerate();
@@ -59,7 +59,7 @@ export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorT
       const response = await generateScript(
         vertical, 
         description, 
-        useHistoricalData, 
+        useBrain, 
         historicalData || undefined
       );
       
@@ -140,7 +140,10 @@ F/1k esperado: ${generatedScript.insights.expected_f1k}
             Genera Guion Estructurado
           </CardTitle>
           <CardDescription className="text-text-secondary">
-            Claude creará un guion con estructura clara optimizada para TikTok
+            {useBrain 
+              ? 'Claude usará tu TikTok Brain para crear guiones basados en tus patrones exitosos'
+              : 'Claude creará un guion con estructura clara optimizada para TikTok'
+            }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -161,18 +164,23 @@ F/1k esperado: ${generatedScript.insights.expected_f1k}
               </Select>
             </div>
 
-            {hasData && (
-              <div className="flex items-center space-x-2 pt-6">
-                <Switch
-                  id="use-data"
-                  checked={useHistoricalData}
-                  onCheckedChange={setUseHistoricalData}
-                />
-                <Label htmlFor="use-data" className="text-sm">
-                  Usar mis datos históricos
-                </Label>
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border">
+              <div className="flex items-center gap-3">
+                <Brain className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="font-medium text-text-primary">
+                    Usar TikTok Brain
+                  </p>
+                  <p className="text-sm text-text-muted">
+                    Guión basado en tus patrones exitosos
+                  </p>
+                </div>
               </div>
-            )}
+              <Switch
+                checked={useBrain}
+                onCheckedChange={setUseBrain}
+              />
+            </div>
           </div>
 
           <div>
@@ -198,16 +206,16 @@ F/1k esperado: ${generatedScript.insights.expected_f1k}
               </>
             ) : (
               <>
-                <FileText className="w-4 h-4 mr-2" />
-                Generar Guion con AI (Claude)
+                {useBrain ? <Brain className="w-4 h-4 mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
+                {useBrain ? 'Generar con TikTok Brain' : 'Generar Guion con AI (Claude)'}
               </>
             )}
           </Button>
 
-          {!hasData && (
+          {!useBrain && !hasData && (
             <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
               <p className="text-sm text-text-secondary">
-                <strong>Tip:</strong> Importa tus datos de TikTok para que Claude genere guiones basados en tus patrones de éxito reales.
+                <strong>Tip:</strong> Activa el TikTok Brain para que Claude genere guiones basados en tus patrones de éxito reales.
               </p>
             </div>
           )}

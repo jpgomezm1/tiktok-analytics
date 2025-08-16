@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { HistoricalData } from '@/hooks/useHistoricalData';
+import { useTikTokBrain, BrainHit } from '@/hooks/useTikTokBrain';
 
 export interface AIRequest {
   prompt: string;
-  data?: HistoricalData;
+  data?: any; // Can be HistoricalData or enhanced with brainContext
   useHistoricalData?: boolean;
 }
 
@@ -16,6 +17,7 @@ export interface AIResponse {
 
 export const useAIGenerate = () => {
   const [loading, setLoading] = useState(false);
+  const { searchBrain } = useTikTokBrain();
 
   const generateContent = async (request: AIRequest): Promise<AIResponse> => {
     setLoading(true);
@@ -46,7 +48,8 @@ export const useAIGenerate = () => {
   const generateIdeas = async (
     count: number = 5, 
     topic: string = '', 
-    historicalData?: HistoricalData
+    historicalData?: HistoricalData,
+    useBrain: boolean = false
   ): Promise<AIResponse> => {
     let prompt = `Genera ${count} ideas creativas para videos de TikTok`;
     
@@ -54,7 +57,37 @@ export const useAIGenerate = () => {
       prompt += ` sobre el tema: "${topic}"`;
     }
 
-    if (historicalData && historicalData.videos.length > 0) {
+    // Use TikTok Brain if requested
+    let brainContext: BrainHit[] = [];
+    if (useBrain) {
+      try {
+        const searchQuery = `ideas para ${topic || 'contenido viral'} basadas en hooks de mayor retención y alto F/1k`;
+        brainContext = await searchBrain({
+          query: searchQuery,
+          topK: 8,
+          filter: {
+            contentTypes: ['hook', 'guion'],
+            dateFrom: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // Last 90 days
+          }
+        });
+      } catch (error) {
+        console.error('Error searching brain:', error);
+      }
+    }
+
+    if (brainContext.length > 0) {
+      prompt += `\n\nUSA ESTOS PATRONES EXITOSOS DE TU TIKTOK BRAIN:
+
+${brainContext.map((hit, i) => `
+${i+1}. ${hit.content_type.toUpperCase()}: "${hit.content.substring(0, 100)}..."
+   - F/1k: ${hit.metrics.f_per_1k?.toFixed(1) || 'N/A'}
+   - Retención: ${hit.metrics.retention_pct?.toFixed(1) || 'N/A'}%
+   - Tipo: ${hit.metrics.video_type || 'N/A'}
+   - Score: ${(hit.score * 100).toFixed(1)}%
+`).join('\n')}
+
+IMPORTANTE: Cada idea debe inspirarse en estos patrones exitosos y incluir:`;
+    } else if (historicalData && historicalData.videos.length > 0) {
       prompt += `\n\nBASE TUS SUGERENCIAS EN ESTOS DATOS HISTÓRICOS REALES:
       
 Métricas promedio del usuario:
@@ -108,13 +141,17 @@ Formato de respuesta en JSON:
 }`;
     }
 
-    return generateContent({ prompt, data: historicalData, useHistoricalData: !!historicalData });
+    return generateContent({ 
+      prompt, 
+      data: brainContext.length > 0 ? { brainContext, historicalData } : historicalData, 
+      useHistoricalData: !!historicalData || brainContext.length > 0 
+    });
   };
 
   const generateScript = async (
     vertical: string,
     description: string,
-    useHistoricalData: boolean,
+    useBrain: boolean,
     historicalData?: HistoricalData
   ): Promise<AIResponse> => {
     let prompt = `Genera un guion estructurado para TikTok sobre: "${description}"
@@ -122,7 +159,35 @@ Formato de respuesta en JSON:
 Vertical: ${vertical}
 `;
 
-    if (useHistoricalData && historicalData && historicalData.videos.length > 0) {
+    // Use TikTok Brain if requested
+    let brainContext: BrainHit[] = [];
+    if (useBrain) {
+      try {
+        const searchQuery = `${vertical} ${description} hooks efectivos CTA efectivos duración óptima`;
+        brainContext = await searchBrain({
+          query: searchQuery,
+          topK: 10,
+          filter: {
+            contentTypes: ['hook', 'cta', 'guion'],
+            dateFrom: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          }
+        });
+      } catch (error) {
+        console.error('Error searching brain:', error);
+      }
+    }
+
+    if (brainContext.length > 0) {
+      prompt += `\nBASADO EN TU TIKTOK BRAIN - PATRONES EXITOSOS:
+
+${brainContext.slice(0, 6).map((hit, i) => `
+${i+1}. ${hit.content_type.toUpperCase()}: "${hit.content.substring(0, 80)}..."
+   - F/1k: ${hit.metrics.f_per_1k?.toFixed(1) || 'N/A'} | Retención: ${hit.metrics.retention_pct?.toFixed(1) || 'N/A'}%
+   - Duración: ${hit.metrics.duration_seconds || 'N/A'}s | Score: ${(hit.score * 100).toFixed(1)}%
+`).join('\n')}
+
+GENERA UN GUION que aplique estos patrones exitosos.`;
+    } else if (historicalData && historicalData.videos.length > 0) {
       prompt += `\nBASADO EN ESTOS DATOS HISTÓRICOS REALES:
 
 Métricas promedio:
@@ -160,16 +225,52 @@ Formato de respuesta en JSON:
   }
 }`;
 
-    return generateContent({ prompt, data: historicalData, useHistoricalData });
+    return generateContent({ 
+      prompt, 
+      data: brainContext.length > 0 ? { brainContext, historicalData } : historicalData, 
+      useHistoricalData: useBrain || !!historicalData 
+    });
   };
 
   const generateStrategicInsights = async (
     question: string,
-    historicalData?: HistoricalData
+    historicalData?: HistoricalData,
+    useBrain: boolean = true
   ): Promise<AIResponse> => {
     let prompt = `Analiza esta pregunta estratégica sobre TikTok: "${question}"`;
 
-    if (historicalData && historicalData.videos.length > 0) {
+    // Use TikTok Brain if requested
+    let brainContext: BrainHit[] = [];
+    if (useBrain) {
+      try {
+        brainContext = await searchBrain({
+          query: question,
+          topK: 12,
+          filter: {
+            dateFrom: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          }
+        });
+      } catch (error) {
+        console.error('Error searching brain:', error);
+      }
+    }
+
+    if (brainContext.length > 0) {
+      prompt += `\n\nUSA TU TIKTOK BRAIN - CONTENIDO RELEVANTE ENCONTRADO:
+
+${brainContext.slice(0, 8).map((hit, i) => `
+${i+1}. ${hit.content_type.toUpperCase()}: "${hit.content.substring(0, 120)}..."
+   - Video: ${hit.metrics.video_type || 'N/A'} | Vistas: ${hit.metrics.views?.toLocaleString() || 'N/A'}
+   - F/1k: ${hit.metrics.f_per_1k?.toFixed(1) || 'N/A'} | Retención: ${hit.metrics.retention_pct?.toFixed(1) || 'N/A'}%
+   - Relevancia: ${(hit.score * 100).toFixed(1)}%
+`).join('\n')}
+
+RESPONDE CON:
+1. Análisis claro basado en los patrones encontrados
+2. 3-5 recomendaciones accionables específicas  
+3. Ejemplos de tu contenido como referencia
+4. Experimentos para probar la próxima semana`;
+    } else if (historicalData && historicalData.videos.length > 0) {
       prompt += `\n\nUSA ESTOS DATOS HISTÓRICOS REALES PARA TU ANÁLISIS:
 
 Resumen del canal:
@@ -229,7 +330,11 @@ Formato JSON:
 }`;
     }
 
-    return generateContent({ prompt, data: historicalData, useHistoricalData: !!historicalData });
+    return generateContent({ 
+      prompt, 
+      data: brainContext.length > 0 ? { brainContext, historicalData } : historicalData, 
+      useHistoricalData: useBrain || !!historicalData 
+    });
   };
 
   return {

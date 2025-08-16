@@ -38,7 +38,7 @@ const AIGenerate = () => {
               AI Generate
             </h1>
             <p className="text-text-secondary">
-              Copiloto creativo con Claude - Ideas, guiones e insights basados en tus datos
+              Copiloto creativo con Claude & TikTok Brain - Ideas, guiones e insights basados en tus datos
             </p>
           </div>
           
@@ -66,8 +66,8 @@ const AIGenerate = () => {
                     Obtén insights personalizados
                   </h3>
                   <p className="text-sm text-text-secondary">
-                    Claude puede generar contenido general, pero para análisis específicos basados en tus patrones de éxito, 
-                    importa tus datos de TikTok desde la sección de Videos.
+                    Claude puede generar contenido general, pero TikTok Brain necesita tus datos históricos para análisis específicos 
+                    basados en tus patrones de éxito. Importa tus datos desde la sección de Videos.
                   </p>
                 </div>
               </div>
@@ -114,10 +114,10 @@ const AIGenerate = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-text-primary">
-                  Potenciado por Claude AI
+                  Potenciado por Claude AI + TikTok Brain
                 </p>
                 <p className="text-xs text-text-muted">
-                  Todas las respuestas se generan usando tus datos históricos cuando están disponibles
+                  Vector knowledge engine con análisis semántico de tus patrones exitosos
                 </p>
               </div>
             </div>
