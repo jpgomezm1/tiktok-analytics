@@ -1,183 +1,129 @@
-import { useState, useMemo } from 'react';
-import { useVideos } from '@/hooks/useVideos';
-import { VideoCard } from '@/components/VideoCard';
+import { useState } from 'react';
+import { AppLayout } from '@/components/AppLayout';
+import { VideoFiltersSidebar } from '@/components/videos/VideoFiltersSidebar';
+import { VideoTable } from '@/components/videos/VideoTable';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, Grid, List, Plus, BarChart3, Upload, Sparkles } from 'lucide-react';
-import { useT } from '@/i18n';
+import { Badge } from '@/components/ui/badge';
+import { useVideoFilters } from '@/hooks/useVideoFilters';
+import { exportToCSV } from '@/utils/csvExport';
+import { VideoFilters, SortOption } from '@/types/videos';
+import { 
+  Download, 
+  Table as TableIcon, 
+  Grid3X3, 
+  Filter,
+  X 
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Videos = () => {
-  const { videos, loading } = useVideos();
-  const t = useT;
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState<'performance' | 'saves_per_1k' | 'engagement_rate'>('performance');
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [showSidebar, setShowSidebar] = useState(true);
+  const { toast } = useToast();
 
-  // Enhanced filtering and sorting
-  const processedVideos = useMemo(() => {
-    // First, calculate derived metrics and filter
-    const videosWithMetrics = videos.map(video => {
-      const views = video.views || 0;
-      const saves = video.saves || 0;
-      const likes = video.likes || 0;
-      const comments = video.comments || 0;
-      const shares = video.shares || 0;
+  const {
+    filters,
+    sortBy,
+    normalizeBy1K,
+    updateFilters,
+    updateSort,
+    updateNormalize,
+    filteredVideos,
+    calculatePerformanceBadge,
+    filterOptions,
+    loading,
+  } = useVideoFilters();
 
-      const savesPer1K = views > 0 ? (saves / views) * 1000 : 0;
-      const engagementRate = views > 0 ? ((likes + comments + shares) / views) * 100 : 0;
-
-      return {
-        ...video,
-        savesPer1K,
-        engagementRate
-      };
-    }).filter(video =>
-      video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      video.hook?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // Then sort by selected criteria
-    return videosWithMetrics.sort((a, b) => {
-      switch (sortBy) {
-        case 'performance':
-          return (b.performance_score || 0) - (a.performance_score || 0);
-        case 'saves_per_1k':
-          return b.savesPer1K - a.savesPer1K;
-        case 'engagement_rate':
-          return b.engagementRate - a.engagementRate;
-        default:
-          return 0;
-      }
+  const handleLoadView = (
+    newFilters: VideoFilters, 
+    newSort: SortOption, 
+    newNormalize: boolean
+  ) => {
+    updateFilters(newFilters);
+    updateSort(newSort);
+    updateNormalize(newNormalize);
+    
+    toast({
+      title: "Vista cargada",
+      description: "Los filtros se han aplicado ✅",
     });
-  }, [videos, searchTerm, sortBy]);
+  };
+
+  const handleExportCSV = () => {
+    if (filteredVideos.length === 0) {
+      toast({
+        title: "Sin datos",
+        description: "No hay videos para exportar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    exportToCSV(filteredVideos);
+    toast({
+      title: "CSV exportado",
+      description: `${filteredVideos.length} videos exportados ✅`,
+    });
+  };
 
   return (
-    <div className="p-6 space-y-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-text-primary mb-2">{t('videos.title')}</h1>
-            <p className="text-text-secondary">{t('videos.description')}</p>
-          </div>
-          <div className="flex items-center gap-4 mt-4 lg:mt-0">
-            <Button variant="outline" className="gap-2">
-              <Plus className="w-4 h-4" />
-              {t('videos.addVideo')}
-            </Button>
-          </div>
-        </div>
+    <AppLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex gap-6">
+          {showSidebar && (
+            <VideoFiltersSidebar
+              filters={filters}
+              sortBy={sortBy}
+              normalizeBy1K={normalizeBy1K}
+              filterOptions={filterOptions}
+              onFiltersChange={updateFilters}
+              onSortChange={updateSort}
+              onNormalizeChange={updateNormalize}
+              onLoadView={handleLoadView}
+            />
+          )}
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-text-primary">Buscar y filtrar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted w-4 h-4" />
-                <Input
-                  placeholder={t('videos.searchPlaceholder')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <div className="flex-1 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <h1 className="text-2xl font-bold">Explorador de Videos</h1>
+                <Badge variant="outline">{filteredVideos.length} videos</Badge>
               </div>
+
               <div className="flex items-center gap-2">
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder={t('videos.sortBy')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="performance">{t('videos.sortByPerformance')}</SelectItem>
-                    <SelectItem value="saves_per_1k">{t('videos.sortBySaves')}</SelectItem>
-                    <SelectItem value="engagement_rate">{t('videos.sortByEngagement')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Filter className="w-4 h-4" />
-                  Filter
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSidebar(!showSidebar)}
+                >
+                  {showSidebar ? <X className="w-4 h-4" /> : <Filter className="w-4 h-4" />}
                 </Button>
-                <div className="flex border border-border rounded-md">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="rounded-r-none"
-                  >
-                    <Grid className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="rounded-l-none"
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
-                </div>
+                
+                <Button
+                  onClick={handleExportCSV}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Exportar CSV
+                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-4 border-purple-bright border-t-transparent rounded-full animate-spin"></div>
+            {loading ? (
+              <div className="h-96 bg-muted animate-pulse rounded-lg" />
+            ) : (
+              <VideoTable
+                videos={filteredVideos}
+                calculatePerformanceBadge={calculatePerformanceBadge}
+                normalizeBy1K={normalizeBy1K}
+                viewMode={viewMode}
+              />
+            )}
           </div>
-        ) : videos.length === 0 ? (
-          <Card className="border-dashed border-2">
-            <CardContent className="py-16 text-center">
-              <div className="max-w-md mx-auto space-y-6">
-                <div className="w-24 h-24 mx-auto bg-gradient-primary rounded-full flex items-center justify-center">
-                  <BarChart3 className="w-12 h-12 text-white" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-text-primary">
-                    Empieza a analizar tu rendimiento
-                  </h3>
-                  <p className="text-text-secondary leading-relaxed">
-                    Sube tus videos o importa tu data de TikTok para ver patrones, métricas y oportunidades de crecimiento.
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button className="gap-2 bg-gradient-primary hover:bg-gradient-primary/90">
-                    <Plus className="w-4 h-4" />
-                    Agregar video
-                  </Button>
-                  <Button variant="outline" className="gap-2">
-                    <Upload className="w-4 h-4" />
-                    Importar CSV
-                  </Button>
-                </div>
-                <div className="flex items-center justify-center gap-2 text-sm text-text-muted">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Convierte tu data en insights accionables</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : processedVideos.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-text-secondary mb-4">No se encontraron videos con ese término</p>
-              <Button variant="outline" onClick={() => setSearchTerm('')}>
-                Ver todos los videos
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-           <div className={`grid gap-6 ${
-             viewMode === 'grid' 
-               ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-               : 'grid-cols-1'
-           }`}>
-             {processedVideos.map((video) => (
-               <VideoCard key={video.id} video={video} />
-             ))}
-           </div>
-        )}
-    </div>
+        </div>
+      </div>
+    </AppLayout>
   );
 };
 

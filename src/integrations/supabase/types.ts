@@ -110,6 +110,39 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_views: {
+        Row: {
+          created_at: string | null
+          filters: Json
+          id: string
+          name: string
+          normalize_by_1k: boolean | null
+          sort_by: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          filters: Json
+          id?: string
+          name: string
+          normalize_by_1k?: boolean | null
+          sort_by: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          filters?: Json
+          id?: string
+          name?: string
+          normalize_by_1k?: boolean | null
+          sort_by?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       videos: {
         Row: {
           avg_time_watched: number | null

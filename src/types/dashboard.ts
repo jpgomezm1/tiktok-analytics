@@ -15,6 +15,10 @@ export interface ProcessedVideo {
   traffic_profile?: number;
   traffic_search?: number;
   video_url?: string;
+  video_theme?: string;
+  cta_type?: string;
+  editing_style?: string;
+  hook?: string;
   // Calculated metrics
   engagement_rate: number;
   saves_per_1k: number;
@@ -22,6 +26,7 @@ export interface ProcessedVideo {
   views_norm: number;
   followers_at_post_time: number;
   speed_2h?: number;
+  performance_score?: number;
 }
 
 export interface DashboardMetrics {
