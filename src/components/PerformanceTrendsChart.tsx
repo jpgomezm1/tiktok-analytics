@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subDays, isSameDay } from 'date-fns';
-import { useT } from '@/i18n';
 
 interface Video {
   id: string;
@@ -25,7 +24,6 @@ interface ChartDataPoint {
 }
 
 export const PerformanceTrendsChart = ({ videos }: PerformanceTrendsChartProps) => {
-  const t = useT;
   const chartData = useMemo(() => {
     if (!videos || videos.length === 0) return [];
 
@@ -84,7 +82,7 @@ export const PerformanceTrendsChart = ({ videos }: PerformanceTrendsChartProps) 
           <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
             📊
           </div>
-          <p className="text-text-muted">{t('chart.noData')}</p>
+          <p className="text-text-muted">No hay datos suficientes para graficar</p>
           <p className="text-text-muted text-sm mt-1">Agrega videos de los últimos 30 días</p>
         </div>
       </div>
@@ -98,7 +96,7 @@ export const PerformanceTrendsChart = ({ videos }: PerformanceTrendsChartProps) 
           <p className="text-text-primary font-medium mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.dataKey === 'views' ? t('chart.views') : t('chart.engagementRate')}: {' '}
+              {entry.dataKey === 'views' ? 'Views' : 'Engagement Rate'}: {' '}
               {entry.dataKey === 'engagementRate' ? `${entry.value}%` : entry.value.toLocaleString()}
             </p>
           ))}
@@ -148,7 +146,7 @@ export const PerformanceTrendsChart = ({ videos }: PerformanceTrendsChartProps) 
             strokeWidth={2}
             dot={{ fill: 'hsl(var(--purple-bright))', strokeWidth: 2, r: 4 }}
             activeDot={{ r: 6, stroke: 'hsl(var(--purple-bright))', strokeWidth: 2 }}
-            name={t('chart.views')}
+            name="Views"
           />
           <Line
             yAxisId="engagement"
@@ -158,7 +156,7 @@ export const PerformanceTrendsChart = ({ videos }: PerformanceTrendsChartProps) 
             strokeWidth={2}
             dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 4 }}
             activeDot={{ r: 6, stroke: 'hsl(var(--success))', strokeWidth: 2 }}
-            name={t('chart.engagementRate')}
+            name="Engagement Rate (%)"
           />
         </LineChart>
       </ResponsiveContainer>

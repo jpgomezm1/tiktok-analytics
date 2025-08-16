@@ -6,11 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, Grid, List, Plus, BarChart3, Upload, Sparkles } from 'lucide-react';
-import { useT } from '@/i18n';
 
 const Videos = () => {
   const { videos, loading } = useVideos();
-  const t = useT;
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'performance' | 'saves_per_1k' | 'engagement_rate'>('performance');
@@ -57,27 +55,27 @@ const Videos = () => {
     <div className="p-6 space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-text-primary mb-2">{t('videos.title')}</h1>
-            <p className="text-text-secondary">{t('videos.description')}</p>
+            <h1 className="text-3xl font-bold text-text-primary mb-2">Video Library</h1>
+            <p className="text-text-secondary">Manage and analyze your TikTok content performance</p>
           </div>
           <div className="flex items-center gap-4 mt-4 lg:mt-0">
             <Button variant="outline" className="gap-2">
               <Plus className="w-4 h-4" />
-              {t('videos.addVideo')}
+              Add Video
             </Button>
           </div>
         </div>
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-text-primary">Buscar y filtrar</CardTitle>
+            <CardTitle className="text-text-primary">Search & Filter</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted w-4 h-4" />
                 <Input
-                  placeholder={t('videos.searchPlaceholder')}
+                  placeholder="Search videos by title or hook..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -86,12 +84,12 @@ const Videos = () => {
               <div className="flex items-center gap-2">
                 <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder={t('videos.sortBy')} />
+                    <SelectValue placeholder="Ordenar por..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="performance">{t('videos.sortByPerformance')}</SelectItem>
-                    <SelectItem value="saves_per_1k">{t('videos.sortBySaves')}</SelectItem>
-                    <SelectItem value="engagement_rate">{t('videos.sortByEngagement')}</SelectItem>
+                    <SelectItem value="performance">Performance Score</SelectItem>
+                    <SelectItem value="saves_per_1k">Saves por 1K</SelectItem>
+                    <SelectItem value="engagement_rate">Engagement Rate</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" size="sm" className="gap-2">

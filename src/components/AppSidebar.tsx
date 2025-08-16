@@ -22,26 +22,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { useT } from "@/i18n";
 
 const menuItems = [
   { 
-    title: "nav.dashboard", 
+    title: "Dashboard", 
     url: "/dashboard", 
     icon: LayoutDashboard 
   },
   { 
-    title: "nav.videos", 
+    title: "Videos", 
     url: "/videos", 
     icon: PlayCircle 
   },
   { 
-    title: "nav.analytics", 
+    title: "Analytics", 
     url: "/analytics", 
     icon: BarChart3 
   },
   { 
-    title: "nav.settings", 
+    title: "Settings", 
     url: "/settings", 
     icon: Settings 
   },
@@ -52,7 +51,6 @@ export function AppSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const t = useT;
   const currentPath = location.pathname;
 
   const isActive = (path: string) => currentPath === path;
@@ -83,7 +81,7 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className={open ? "" : "sr-only"}>
-            Navegación
+            Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -99,7 +97,7 @@ export function AppSidebar() {
                   >
                     <NavLink to={item.url} className="flex items-center gap-3">
                       <item.icon className="w-4 h-4 flex-shrink-0" />
-                      {open && <span>{t(item.title)}</span>}
+                      {open && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -136,7 +134,7 @@ export function AppSidebar() {
               className="w-full text-text-secondary border-border hover:bg-destructive hover:text-white hover:border-destructive"
             >
               <LogOut className="w-4 h-4 mr-2" />
-              {t('nav.logout')}
+              Sign Out
             </Button>
           </div>
         ) : (
