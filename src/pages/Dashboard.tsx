@@ -4,8 +4,12 @@ import { Button } from '@/components/ui/button';
 import { MetricCard } from '@/components/MetricCard';
 import { VideoCard } from '@/components/VideoCard';
 import { CSVImportModal } from '@/components/CSVImportModal';
+import { FollowersMetricCard } from '@/components/FollowersMetricCard';
+import { FollowersUpdateForm } from '@/components/FollowersUpdateForm';
+import { FollowersChart } from '@/components/FollowersChart';
 import { useVideos } from '@/hooks/useVideos';
 import { useAuth } from '@/hooks/useAuth';
+import { useFollowers } from '@/hooks/useFollowers';
 import { 
   Users, 
   Eye, 
@@ -22,6 +26,7 @@ import { PerformanceTrendsChart } from '@/components/PerformanceTrendsChart';
 const Dashboard = () => {
   const { analytics, loading, videos, addVideo } = useVideos();
   const { user, signOut } = useAuth();
+  const { trend: followersTrend } = useFollowers();
   const navigate = useNavigate();
   const [showAddVideo, setShowAddVideo] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
@@ -106,15 +111,12 @@ const Dashboard = () => {
               </div>
             ) : (
               <>
+                {/* Followers Update Form */}
+                <FollowersUpdateForm />
+
                 {/* Key Metrics */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <MetricCard
-                    title="Total Followers"
-                    value={15847}
-                    change="+8.5% this month"
-                    changeType="increase"
-                    icon={<Users />}
-                  />
+                  <FollowersMetricCard />
                   <MetricCard
                     title="Avg Views"
                     value={analytics.avgViews}
@@ -139,8 +141,8 @@ const Dashboard = () => {
                 </div>
 
                 {/* Charts Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Growth Chart */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Performance Overview */}
                   <Card className="bg-card border-border shadow-card">
                     <CardHeader>
                       <CardTitle className="text-text-primary flex items-center gap-2">
@@ -155,6 +157,9 @@ const Dashboard = () => {
                       <PerformanceTrendsChart videos={videos} />
                     </CardContent>
                   </Card>
+
+                  {/* Followers Chart */}
+                  <FollowersChart data={followersTrend} />
 
                   {/* Top Performers */}
                   <Card className="bg-card border-border shadow-card">
