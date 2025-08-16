@@ -5,16 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { MetricTooltip } from './MetricTooltip';
 import { VideoExamplesModal } from './VideoExamplesModal';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-
-interface ProcessedVideo {
-  id: string;
-  title: string;
-  published_date: string;
-  views_norm: number;
-  engagement_rate: number;
-  saves_per_1k: number;
-  completion_rate: number;
-}
+import { ProcessedVideo } from '@/types/dashboard';
 
 interface TopBottomComparisonProps {
   topPerformers: ProcessedVideo[];

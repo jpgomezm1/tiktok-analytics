@@ -9,19 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, Calendar, Eye, Heart, Bookmark } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-
-interface ProcessedVideo {
-  id: string;
-  title: string;
-  published_date: string;
-  views_norm: number;
-  engagement_rate: number;
-  saves_per_1k: number;
-  completion_rate: number;
-  views: number;
-  likes: number;
-  video_url?: string;
-}
+import { ProcessedVideo } from '@/types/dashboard';
 
 interface VideoExamplesModalProps {
   isOpen: boolean;
