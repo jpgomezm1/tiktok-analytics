@@ -64,13 +64,26 @@ export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorT
       );
       
       if (response.success && response.content) {
-        const parsed = JSON.parse(response.content);
-        setGeneratedScript(parsed.script);
-        
-        toast({
-          title: "Guion generado",
-          description: "Claude ha creado tu guion estructurado",
-        });
+        try {
+          // Clean and parse the JSON response
+          let cleanedContent = response.content.trim();
+          
+          // Remove any markdown code block wrappers
+          cleanedContent = cleanedContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          
+          // Try to parse the JSON
+          const parsed = JSON.parse(cleanedContent);
+          setGeneratedScript(parsed.script);
+          
+          toast({
+            title: "Guion generado",
+            description: "Claude ha creado tu guion estructurado",
+          });
+        } catch (parseError) {
+          console.error('JSON parsing error:', parseError);
+          console.error('Response content:', response.content);
+          throw new Error('La respuesta de Claude no tiene el formato correcto');
+        }
       } else {
         throw new Error(response.error || 'No se pudo generar el guion');
       }

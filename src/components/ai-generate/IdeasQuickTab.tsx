@@ -38,14 +38,26 @@ export const IdeasQuickTab = ({ historicalData, hasData }: IdeasQuickTabProps) =
       const response = await generateIdeas(count, topic, historicalData || undefined, useBrain);
       
       if (response.success && response.content) {
-        // Parse JSON response
-        const parsed = JSON.parse(response.content);
-        setIdeas(parsed.ideas || []);
-        
-        toast({
-          title: "Ideas generadas",
-          description: `${parsed.ideas?.length || 0} ideas creadas con Claude`,
-        });
+        try {
+          // Clean and parse the JSON response
+          let cleanedContent = response.content.trim();
+          
+          // Remove any markdown code block wrappers
+          cleanedContent = cleanedContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          
+          // Parse JSON response
+          const parsed = JSON.parse(cleanedContent);
+          setIdeas(parsed.ideas || []);
+          
+          toast({
+            title: "Ideas generadas",
+            description: `${parsed.ideas?.length || 0} ideas creadas con Claude`,
+          });
+        } catch (parseError) {
+          console.error('JSON parsing error:', parseError);
+          console.error('Response content:', response.content);
+          throw new Error('La respuesta de Claude no tiene el formato correcto');
+        }
       } else {
         throw new Error(response.error || 'No se pudieron generar ideas');
       }

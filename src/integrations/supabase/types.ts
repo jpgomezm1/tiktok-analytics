@@ -352,6 +352,24 @@ export type Database = {
         Args: { "": string } | { "": unknown }
         Returns: unknown
       }
+      exec_sql: {
+        Args: { params?: Json; sql: string }
+        Returns: {
+          content: string
+          content_type: string
+          duration_seconds: number
+          f_per_1k: number
+          for_you_pct: number
+          id: string
+          published_date: string
+          retention_pct: number
+          saves_per_1k: number
+          score: number
+          video_id: string
+          video_type: string
+          views: number
+        }[]
+      }
       halfvec_avg: {
         Args: { "": number[] }
         Returns: unknown

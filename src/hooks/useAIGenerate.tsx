@@ -33,7 +33,23 @@ export const useAIGenerate = () => {
         throw new Error(error.message || 'Failed to generate content');
       }
 
-      return data;
+      // Clean the response content before parsing
+      let cleanedContent = data.content || '';
+      
+      // Remove control characters that can break JSON parsing
+      cleanedContent = cleanedContent.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+      
+      // Try to extract JSON if the response contains extra text
+      const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleanedContent = jsonMatch[0];
+      }
+
+      return {
+        success: data.success || true,
+        content: cleanedContent,
+        error: data.error
+      };
     } catch (error) {
       console.error('Error generating AI content:', error);
       return {

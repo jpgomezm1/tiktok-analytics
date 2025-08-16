@@ -59,13 +59,25 @@ export const StrategicInsightsTab = ({ historicalData, hasData }: StrategicInsig
       const response = await generateStrategicInsights(question, historicalData || undefined);
       
       if (response.success && response.content) {
-        const parsed = JSON.parse(response.content);
-        setInsights(parsed);
-        
-        toast({
-          title: "Análisis completado",
-          description: "Claude ha analizado tu estrategia",
-        });
+        try {
+          // Clean and parse the JSON response
+          let cleanedContent = response.content.trim();
+          
+          // Remove any markdown code block wrappers
+          cleanedContent = cleanedContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          
+          const parsed = JSON.parse(cleanedContent);
+          setInsights(parsed);
+          
+          toast({
+            title: "Análisis completado",
+            description: "Claude ha analizado tu estrategia",
+          });
+        } catch (parseError) {
+          console.error('JSON parsing error:', parseError);
+          console.error('Response content:', response.content);
+          throw new Error('La respuesta de Claude no tiene el formato correcto');
+        }
       } else {
         throw new Error(response.error || 'No se pudo generar el análisis');
       }
