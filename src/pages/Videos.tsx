@@ -7,6 +7,8 @@ import { VideoFiltersBar } from '@/components/VideoFiltersBar';
 import { VideoExplorerCard } from '@/components/VideoExplorerCard';
 import { VideoListView } from '@/components/VideoListView';
 import { VideoComparisonModal } from '@/components/VideoComparisonModal';
+import { NoVideosState } from '@/components/empty-states/NoVideosState';
+import { VideoGridSkeleton } from '@/components/skeletons/VideoCardSkeleton';
 import { useVideoExplorer, VideoFilters, VideoExplorerData } from '@/hooks/useVideoExplorer';
 import { 
   Grid, 
@@ -23,7 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Videos = () => {
   const { videos, loading, getVideos, getComparison } = useVideoExplorer();
-  const { toast } = useToast();
+  const { toast, success, error: showError } = useToast();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
@@ -82,11 +84,14 @@ const Videos = () => {
   };
 
   const handleExportCSV = () => {
+    success({
+      title: "Exportación iniciada",
+      description: `Preparando ${filteredVideos.length} videos para descarga...`
+    });
     if (filteredVideos.length === 0) {
-      toast({
+      showError({
         title: "No hay datos para exportar",
-        description: "Ajusta los filtros para incluir videos",
-        variant: "destructive"
+        description: "Ajusta los filtros para incluir videos"
       });
       return;
     }
@@ -122,80 +127,42 @@ const Videos = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    toast({
-      title: "CSV exportado",
-      description: `${filteredVideos.length} videos exportados correctamente`
+    
+    success({
+      title: "CSV descargado exitosamente",
+      description: `${filteredVideos.length} videos exportados`
     });
   };
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-4 border-purple-bright border-t-transparent rounded-full animate-spin"></div>
+      <div className="space-y-xl">
+        <div className="flex justify-end">
+          <div className="h-10 w-48 bg-muted animate-pulse rounded"></div>
         </div>
+        <VideoGridSkeleton count={12} />
       </div>
     );
   }
 
   if (videos.length === 0) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-text-primary mb-2">Explorador de Videos</h1>
-            <p className="text-text-secondary">Descubre patrones de rendimiento en tu contenido</p>
-          </div>
-        </div>
-
-        <Card className="border-dashed border-2">
-          <CardContent className="py-16 text-center">
-            <div className="max-w-md mx-auto space-y-6">
-              <div className="w-24 h-24 mx-auto bg-gradient-primary rounded-full flex items-center justify-center">
-                <BarChart3 className="w-12 h-12 text-white" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-text-primary">
-                  Importa tu CSV para empezar
-                </h3>
-                <p className="text-text-secondary leading-relaxed">
-                  Sube tus datos de TikTok para encontrar patrones usando señales fuertes como retención, saves y tráfico For You.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button className="gap-2 bg-gradient-primary hover:bg-gradient-primary/90">
-                  <Upload className="w-4 h-4" />
-                  Importar CSV
-                </Button>
-                <Button variant="outline" className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Agregar video manual
-                </Button>
-              </div>
-              <div className="flex items-center justify-center gap-2 text-sm text-text-muted">
-                <Sparkles className="w-4 h-4" />
-                <span>Análisis por percentiles, no solo por views</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="space-y-xl">
+        <NoVideosState 
+          title="Importa tu CSV para empezar"
+          subtitle="Sube tus datos de TikTok para encontrar patrones usando señales fuertes como retención, saves y tráfico For You."
+          showImportButton={true}
+          showExampleButton={true}
+        />
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">Explorador de Videos</h1>
-          <p className="text-text-secondary">
-            Encuentra patrones usando señales fuertes y ranking por percentiles
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3 mt-4 lg:mt-0">
+    <div className="space-y-xl">
+      {/* Page Controls */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-end gap-lg mb-xl">
+        <div className="flex items-center gap-md">
           {selectedVideos.length > 0 && (
             <Badge variant="secondary" className="gap-1">
               <Users className="w-3 h-3" />
@@ -294,7 +261,7 @@ const Videos = () => {
           </CardContent>
         </Card>
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-xl">
           {filteredVideos.map((video) => (
             <VideoExplorerCard
               key={video.id}

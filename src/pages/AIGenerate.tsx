@@ -27,22 +27,10 @@ const AIGenerate = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-text-primary mb-2 flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              AI Generate
-            </h1>
-            <p className="text-text-secondary">
-              Copiloto creativo con Claude & TikTok Brain - Ideas, guiones e insights basados en tus datos
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-3 mt-4 lg:mt-0">
+      <div className="max-w-7xl mx-auto space-y-xl">
+        {/* Page Status */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-end gap-lg mb-xl">
+          <div className="flex items-center gap-3">
             {hasData ? (
               <Badge className="bg-success/20 text-success border-success/40">
                 {historicalData.metrics.video_count} videos cargados

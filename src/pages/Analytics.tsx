@@ -394,14 +394,7 @@ const Analytics = () => {
   }, [videos]);
 
   return (
-    <div className="p-6 space-y-6">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <Brain className="w-8 h-8 text-purple-400" />
-            <h1 className="text-3xl font-bold text-text-primary">AI Content Insights</h1>
-          </div>
-          <p className="text-text-secondary">AI-powered analysis of your content performance with actionable growth recommendations</p>
-        </div>
+    <div className="space-y-xl">
 
         {loading ? (
           <div className="flex items-center justify-center py-12">

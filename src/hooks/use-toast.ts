@@ -168,6 +168,18 @@ function toast({ ...props }: Toast) {
   }
 }
 
+// Enhanced toast variants
+const toastVariants = {
+  success: (props: Omit<Toast, 'variant'>) => 
+    toast({ ...props, variant: 'success' }),
+  error: (props: Omit<Toast, 'variant'>) => 
+    toast({ ...props, variant: 'destructive' }),
+  warning: (props: Omit<Toast, 'variant'>) => 
+    toast({ ...props, variant: 'warning' }),
+  info: (props: Omit<Toast, 'variant'>) => 
+    toast({ ...props, variant: 'info' }),
+}
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
@@ -184,6 +196,10 @@ function useToast() {
   return {
     ...state,
     toast,
+    success: toastVariants.success,
+    error: toastVariants.error,
+    warning: toastVariants.warning,
+    info: toastVariants.info,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }
 }

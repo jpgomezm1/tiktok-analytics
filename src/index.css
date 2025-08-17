@@ -48,24 +48,63 @@ All colors MUST be HSL.
     --success: 142 76% 36%;
     --warning: 25 95% 53%;
     --error: 0 84% 60%;
+    --info: 204 100% 59%;
     
-    /* Text Colors */
+    /* Enhanced Text Colors */
     --text-primary: 0 0% 100%;
     --text-secondary: 220 9% 83%;
     --text-muted: 217 10% 65%;
+    --text-inverse: 224 71% 4%;
+    
+    /* Enhanced Semantic Colors */
+    --success-light: 142 76% 45%;
+    --success-dark: 142 76% 25%;
+    --warning-light: 25 95% 65%;
+    --warning-dark: 25 95% 35%;
+    --error-light: 0 84% 70%;
+    --error-dark: 0 84% 45%;
+    --info-light: 204 100% 70%;
+    --info-dark: 204 100% 40%;
     
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(263 70% 50%), hsl(264 83% 70%));
     --gradient-purple: linear-gradient(135deg, hsl(263 70% 50%), hsl(280 100% 70%));
     --gradient-dark: linear-gradient(135deg, hsl(224 71% 4%), hsl(224 71% 8%));
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 45%));
+    --gradient-warning: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 95% 65%));
     
-    /* Shadows */
+    /* Enhanced Shadows */
     --shadow-card: 0 4px 6px -1px hsl(224 71% 4% / 0.3);
     --shadow-purple: 0 10px 30px -10px hsl(263 70% 50% / 0.3);
     --shadow-glow: 0 0 40px hsl(264 83% 70% / 0.4);
+    --shadow-success: 0 4px 12px -2px hsl(142 76% 36% / 0.2);
+    --shadow-warning: 0 4px 12px -2px hsl(25 95% 53% / 0.2);
+    --shadow-hover: 0 8px 25px -8px hsl(224 71% 4% / 0.4);
+    
+    /* Typography Scale */
+    --font-size-xs: 0.75rem;      /* 12px */
+    --font-size-sm: 0.875rem;     /* 14px */
+    --font-size-base: 1rem;       /* 16px */
+    --font-size-lg: 1.125rem;     /* 18px */
+    --font-size-xl: 1.25rem;      /* 20px */
+    --font-size-2xl: 1.5rem;      /* 24px */
+    --font-size-3xl: 1.875rem;    /* 30px */
+    --font-size-4xl: 2.25rem;     /* 36px */
+    
+    /* Spacing Scale */
+    --spacing-xs: 0.25rem;        /* 4px */
+    --spacing-sm: 0.5rem;         /* 8px */
+    --spacing-md: 0.75rem;        /* 12px */
+    --spacing-lg: 1rem;           /* 16px */
+    --spacing-xl: 1.5rem;         /* 24px */
+    --spacing-2xl: 2rem;          /* 32px */
+    --spacing-3xl: 3rem;          /* 48px */
+    --spacing-4xl: 4rem;          /* 64px */
     
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Force dark theme - no light mode toggle needed */
@@ -105,4 +144,24 @@ All colors MUST be HSL.
 /* Force dark theme globally */
 html {
   @apply dark;
+}
+
+/* Tour highlight styles */
+.tour-highlight {
+  position: relative;
+  z-index: 41;
+  outline: 2px solid hsl(var(--purple-bright));
+  outline-offset: 4px;
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+  animation: tour-pulse 2s infinite;
+}
+
+@keyframes tour-pulse {
+  0%, 100% {
+    outline-color: hsl(var(--purple-bright));
+  }
+  50% {
+    outline-color: hsl(var(--purple-light));
+  }
 }

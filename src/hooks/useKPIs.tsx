@@ -185,51 +185,53 @@ export const useKPIs = () => {
 
   const newFollowers = async (period: Period): Promise<KPIValue> => {
     if (!user) throw new Error('User not authenticated');
-
-    const days = getDaysFromPeriod(period);
     
-    // Get current and previous counts
+    // Get current (today's) followers count
     const { data: current } = await (supabase as any)
       .from('followers_history')
-      .select('followers_count')
+      .select('followers_count, entry_date')
       .eq('user_id', user.id)
       .order('entry_date', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    const datePeriod = new Date();
-    datePeriod.setDate(datePeriod.getDate() - days);
+    // Get yesterday's followers count
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
     
-    const { data: periodStart } = await (supabase as any)
+    const { data: yesterdayData } = await (supabase as any)
       .from('followers_history')
       .select('followers_count')
       .eq('user_id', user.id)
-      .lte('entry_date', datePeriod.toISOString().split('T')[0])
+      .lte('entry_date', yesterday.toISOString().split('T')[0])
       .order('entry_date', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    // For delta comparison, get previous period
-    const datePrevious = new Date();
-    datePrevious.setDate(datePrevious.getDate() - (days * 2));
+    // Get day before yesterday for delta comparison
+    const dayBeforeYesterday = new Date();
+    dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 2);
     
-    const { data: previousPeriodStart } = await (supabase as any)
+    const { data: dayBeforeYesterdayData } = await (supabase as any)
       .from('followers_history')
       .select('followers_count')
       .eq('user_id', user.id)
-      .lte('entry_date', datePrevious.toISOString().split('T')[0])
+      .lte('entry_date', dayBeforeYesterday.toISOString().split('T')[0])
       .order('entry_date', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     const currentCount = current?.followers_count || 0;
-    const periodStartCount = periodStart?.followers_count || currentCount;
-    const previousPeriodStartCount = previousPeriodStart?.followers_count || periodStartCount;
+    const yesterdayCount = yesterdayData?.followers_count || currentCount;
+    const dayBeforeYesterdayCount = dayBeforeYesterdayData?.followers_count || yesterdayCount;
 
-    const value = currentCount - periodStartCount;
-    const previousValue = periodStartCount - previousPeriodStartCount;
-    const deltaAbs = value - previousValue;
-    const deltaPct = previousValue !== 0 ? (deltaAbs / Math.abs(previousValue)) * 100 : 0;
+    // Value shows daily difference (today - yesterday)
+    const value = currentCount - yesterdayCount;
+    
+    // Delta shows change compared to previous day's difference
+    const previousDayDifference = yesterdayCount - dayBeforeYesterdayCount;
+    const deltaAbs = value - previousDayDifference;
+    const deltaPct = previousDayDifference !== 0 ? (deltaAbs / Math.abs(previousDayDifference)) * 100 : 0;
 
     return { value, deltaAbs, deltaPct, spark: [] };
   };

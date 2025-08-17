@@ -28,52 +28,76 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
-const menuItems = [
-  { 
-    title: "Dashboard", 
-    url: "/dashboard", 
-    icon: LayoutDashboard 
+const menuGroups = [
+  {
+    label: "Analytics",
+    items: [
+      { 
+        title: "Dashboard", 
+        url: "/dashboard", 
+        icon: LayoutDashboard,
+        shortcut: "D"
+      },
+      { 
+        title: "Videos", 
+        url: "/videos", 
+        icon: PlayCircle,
+        shortcut: "V"
+      },
+      { 
+        title: "Analytics", 
+        url: "/analytics", 
+        icon: BarChart3,
+        shortcut: "A"
+      }
+    ]
   },
-  { 
-    title: "Videos", 
-    url: "/videos", 
-    icon: PlayCircle 
+  {
+    label: "AI Tools",
+    items: [
+      { 
+        title: "AI Generate", 
+        url: "/ai-generate", 
+        icon: Sparkles,
+        shortcut: "G"
+      },
+      { 
+        title: "Brain Search", 
+        url: "/brain-search", 
+        icon: Search,
+        shortcut: "S"
+      },
+      { 
+        title: "Content Ideas", 
+        url: "/content-ideas", 
+        icon: Lightbulb,
+        shortcut: "I"
+      },
+      { 
+        title: "Analizador Viral", 
+        url: "/viral-analyzer", 
+        icon: TrendingUp,
+        shortcut: "Z"
+      }
+    ]
   },
-  { 
-    title: "AI Generate", 
-    url: "/ai-generate", 
-    icon: Sparkles 
-  },
-  { 
-    title: "Analytics", 
-    url: "/analytics", 
-    icon: BarChart3 
-  },
-  { 
-    title: "Brain Search", 
-    url: "/brain-search", 
-    icon: Search 
-  },
-  { 
-    title: "Content Ideas", 
-    url: "/content-ideas", 
-    icon: Lightbulb 
-  },
-  { 
-    title: "Analizador Viral", 
-    url: "/viral-analyzer", 
-    icon: TrendingUp 
-  },
-  { 
-    title: "Contexto", 
-    url: "/context", 
-    icon: Target 
-  },
-  { 
-    title: "Settings", 
-    url: "/settings", 
-    icon: Settings 
-  },
+  {
+    label: "Configuration",
+    items: [
+      { 
+        title: "Contexto", 
+        url: "/context", 
+        icon: Target,
+        shortcut: "C"
+      },
+      { 
+        title: "Settings", 
+        url: "/settings", 
+        icon: Settings,
+        shortcut: ","
+      }
+    ]
+  }
 ];
 
 export function AppSidebar() {
@@ -109,32 +133,44 @@ export function AppSidebar() {
           )}
         </div>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className={open ? "" : "sr-only"}>
-            Navigation
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild
-                    className={`${
-                      isActive(item.url) 
-                        ? "bg-purple-dark/20 text-purple-bright border-r-2 border-purple-bright" 
-                        : "text-text-secondary hover:bg-muted hover:text-text-primary"
-                    } transition-colors`}
-                  >
-                    <NavLink to={item.url} className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4 flex-shrink-0" />
-                      {open && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {menuGroups.map((group, groupIndex) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel className={open ? "text-text-muted text-xs font-semibold uppercase tracking-wide px-3 py-2" : "sr-only"}>
+              {group.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild
+                      className={`${
+                        isActive(item.url) 
+                          ? "bg-purple-bright/10 text-purple-light border-r-2 border-purple-bright shadow-purple" 
+                          : "text-text-secondary hover:bg-muted hover:text-text-primary hover:shadow-hover"
+                      } transition-smooth group relative`}
+                    >
+                      <NavLink to={item.url} className="flex items-center gap-3">
+                        <item.icon className="w-4 h-4 flex-shrink-0 group-hover:scale-110 transition-fast" />
+                        {open && (
+                          <div className="flex items-center justify-between w-full">
+                            <span className="group-hover:text-purple-light transition-fast">{item.title}</span>
+                            <kbd className="hidden group-hover:inline-block px-1.5 py-0.5 text-xs bg-muted rounded border border-border text-text-muted">
+                              {item.shortcut}
+                            </kbd>
+                          </div>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+            {groupIndex < menuGroups.length - 1 && open && (
+              <div className="mx-3 my-2 h-px bg-border"></div>
+            )}
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       {/* User Profile Section */}
@@ -161,7 +197,7 @@ export function AppSidebar() {
               variant="outline"
               size="sm"
               onClick={handleSignOut}
-              className="w-full text-text-secondary border-border hover:bg-destructive hover:text-white hover:border-destructive"
+              className="w-full text-text-secondary border-border hover:bg-destructive hover:text-white hover:border-destructive transition-fast hover:shadow-warning"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
@@ -178,7 +214,7 @@ export function AppSidebar() {
               variant="ghost"
               size="sm"
               onClick={handleSignOut}
-              className="p-2 text-text-secondary hover:bg-destructive hover:text-white"
+              className="p-2 text-text-secondary hover:bg-destructive hover:text-white transition-fast hover:scale-110 transform"
             >
               <LogOut className="w-4 h-4" />
             </Button>

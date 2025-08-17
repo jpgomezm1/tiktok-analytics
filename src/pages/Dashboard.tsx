@@ -10,6 +10,10 @@ import { PeriodSelector } from '@/components/PeriodSelector';
 import { FollowersChart } from '@/components/FollowersChart';
 import { TopBottomChart } from '@/components/TopBottomChart';
 import { TrafficDonutChart } from '@/components/TrafficDonutChart';
+import { DashboardTour, TourTrigger } from '@/components/tours/DashboardTour';
+import { KPIGridSkeleton } from '@/components/skeletons/KPISkeleton';
+import { VideoGridSkeleton } from '@/components/skeletons/VideoCardSkeleton';
+import { useToast } from '@/hooks/use-toast';
 import { useVideos } from '@/hooks/useVideos';
 import { useAuth } from '@/hooks/useAuth';
 import { useFollowers } from '@/hooks/useFollowers';
@@ -33,9 +37,11 @@ const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { latestCount: followersCount } = useFollowers();
   const kpis = useKPIs();
+  const { success, error, info } = useToast();
   const navigate = useNavigate();
   const [showAddVideo, setShowAddVideo] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const [showGlossary, setShowGlossary] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('30d');
   
@@ -119,6 +125,10 @@ const Dashboard = () => {
 
   const handlePeriodChange = (period: Period) => {
     setSelectedPeriod(period);
+    info({
+      title: `Período actualizado a ${period === '7d' ? '7 días' : period === '30d' ? '30 días' : '90 días'}`,
+      description: 'Los KPIs se están recalculando...'
+    });
   };
 
   const handleSignOut = async () => {
@@ -131,31 +141,30 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-purple-bright border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-text-secondary">Cargando tus KPIs...</p>
+      <div className="space-y-xl">
+        <div className="flex justify-end">
+          <div className="h-10 w-32 bg-muted animate-pulse rounded"></div>
+        </div>
+        <KPIGridSkeleton count={6} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-xl">
+          <div className="lg:col-span-3">
+            <VideoGridSkeleton count={6} />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">Dashboard</h1>
-          <p className="text-text-secondary">
-            KPIs accionables para impulsar tu crecimiento
-          </p>
-        </div>
-        
-        <div className="flex items-center space-x-3">
+    <div className="space-y-xl">
+      {/* Page Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-lg mb-xl">
+        <div className="flex items-center space-x-md" data-tour="period-selector">
           <PeriodSelector 
             selectedPeriod={selectedPeriod} 
             onPeriodChange={handlePeriodChange}
           />
+          <TourTrigger onStartTour={() => setShowTour(true)} />
           <Button
             variant="outline"
             size="sm"
@@ -168,7 +177,7 @@ const Dashboard = () => {
         </div>
       </div>
       {/* Action Buttons */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-sm">
         <Button
           variant="outline"
           size="sm"
@@ -244,7 +253,7 @@ const Dashboard = () => {
           )}
 
           {/* KPIs Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg" data-tour="kpis-grid">
             <KPICard
               title="Seguidores actuales"
               value={kpiData.followersNow?.value || 0}
@@ -257,12 +266,12 @@ const Dashboard = () => {
             />
             
             <KPICard
-              title={`Nuevos seguidores (${selectedPeriod})`}
+              title="Nuevos seguidores (hoy)"
               value={kpiData.newFollowers?.value || 0}
               deltaAbs={kpiData.newFollowers?.deltaAbs || 0}
               deltaPct={kpiData.newFollowers?.deltaPct || 0}
               icon={<UserPlus />}
-              tooltip="Crecimiento neto de seguidores en el periodo seleccionado"
+              tooltip="Diferencia de seguidores entre hoy y ayer"
               loading={!kpiData.newFollowers}
               onInfoClick={() => setShowGlossary(true)}
             />
@@ -322,7 +331,7 @@ const Dashboard = () => {
 
           {/* Charts Section */}
           {hasVideosData && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-xl" data-tour="viral-videos">
               {/* Followers Trend */}
               <FollowersChart data={chartsData.followersTrend} loading={loading} />
               
@@ -344,7 +353,7 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg" data-tour="ai-insights">
                   {analytics.recentVideos.slice(0, 6).map((video) => (
                     <VideoCard key={video.id} video={video} />
                   ))}
@@ -357,6 +366,13 @@ const Dashboard = () => {
 
       {/* Glossary Panel */}
       <KPIGlossary open={showGlossary} onClose={() => setShowGlossary(false)} />
+
+      {/* Tour */}
+      <DashboardTour
+        isActive={showTour}
+        onComplete={() => setShowTour(false)}
+        onSkip={() => setShowTour(false)}
+      />
 
       {/* Modals */}
       <CSVImportModal

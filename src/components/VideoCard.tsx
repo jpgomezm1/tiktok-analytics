@@ -63,7 +63,7 @@ export const VideoCard = ({ video, className }: VideoCardProps) => {
   };
 
   return (
-    <Card className={cn("bg-card border-border shadow-card hover:shadow-purple transition-all duration-300 cursor-pointer group", className)}>
+    <Card className={cn("bg-card border-border shadow-card hover:shadow-hover transition-smooth cursor-pointer group hover:border-purple-bright/30 hover:bg-card/90 transform hover:scale-[1.02]", className)}>
       <CardContent className="p-4">
         <div className="flex gap-3">
           {/* Video Thumbnail */}
@@ -84,7 +84,7 @@ export const VideoCard = ({ video, className }: VideoCardProps) => {
           {/* Video Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-2">
-              <h3 className="text-sm font-medium text-text-primary truncate group-hover:text-purple-light transition-colors">
+              <h3 className="text-sm font-medium text-text-primary truncate group-hover:text-purple-light transition-fast">
                 {video.title}
               </h3>
               <div className={cn(
@@ -104,21 +104,21 @@ export const VideoCard = ({ video, className }: VideoCardProps) => {
             )}
 
             {/* Metrics */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-1 text-text-secondary">
-                <Eye className="w-3 h-3" />
+            <div className="grid grid-cols-2 gap-2 text-xs group-hover:text-text-secondary transition-fast">
+              <div className="flex items-center gap-1 text-text-secondary group-hover:text-text-primary transition-fast">
+                <Eye className="w-3 h-3 group-hover:text-info transition-fast" />
                 <span>{formatNumber(video.views || 0)}</span>
               </div>
-              <div className="flex items-center gap-1 text-text-secondary">
-                <Heart className="w-3 h-3" />
+              <div className="flex items-center gap-1 text-text-secondary group-hover:text-text-primary transition-fast">
+                <Heart className="w-3 h-3 group-hover:text-error transition-fast" />
                 <span>{formatNumber(video.likes || 0)}</span>
               </div>
-              <div className="flex items-center gap-1 text-text-secondary">
-                <MessageCircle className="w-3 h-3" />
+              <div className="flex items-center gap-1 text-text-secondary group-hover:text-text-primary transition-fast">
+                <MessageCircle className="w-3 h-3 group-hover:text-info transition-fast" />
                 <span>{formatNumber(video.comments || 0)}</span>
               </div>
-              <div className="flex items-center gap-1 text-text-secondary">
-                <Share className="w-3 h-3" />
+              <div className="flex items-center gap-1 text-text-secondary group-hover:text-text-primary transition-fast">
+                <Share className="w-3 h-3 group-hover:text-success transition-fast" />
                 <span>{formatNumber(video.shares || 0)}</span>
               </div>
             </div>

@@ -62,27 +62,72 @@ export default {
 					light: 'hsl(var(--purple-light))',
 					glow: 'hsl(var(--purple-glow))'
 				},
-				success: 'hsl(var(--success))',
-				warning: 'hsl(var(--warning))',
-				error: 'hsl(var(--error))',
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					light: 'hsl(var(--success-light))',
+					dark: 'hsl(var(--success-dark))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					light: 'hsl(var(--warning-light))',
+					dark: 'hsl(var(--warning-dark))'
+				},
+				error: {
+					DEFAULT: 'hsl(var(--error))',
+					light: 'hsl(var(--error-light))',
+					dark: 'hsl(var(--error-dark))'
+				},
+				info: {
+					DEFAULT: 'hsl(var(--info))',
+					light: 'hsl(var(--info-light))',
+					dark: 'hsl(var(--info-dark))'
+				},
 				text: {
 					primary: 'hsl(var(--text-primary))',
 					secondary: 'hsl(var(--text-secondary))',
-					muted: 'hsl(var(--text-muted))'
+					muted: 'hsl(var(--text-muted))',
+					inverse: 'hsl(var(--text-inverse))'
 				}
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
 				'gradient-purple': 'var(--gradient-purple)',
-				'gradient-dark': 'var(--gradient-dark)'
+				'gradient-dark': 'var(--gradient-dark)',
+				'gradient-success': 'var(--gradient-success)',
+				'gradient-warning': 'var(--gradient-warning)'
 			},
 			boxShadow: {
 				'card': 'var(--shadow-card)',
 				'purple': 'var(--shadow-purple)',
-				'glow': 'var(--shadow-glow)'
+				'glow': 'var(--shadow-glow)',
+				'success': 'var(--shadow-success)',
+				'warning': 'var(--shadow-warning)',
+				'hover': 'var(--shadow-hover)'
+			},
+			fontSize: {
+				'xs': 'var(--font-size-xs)',
+				'sm': 'var(--font-size-sm)',
+				'base': 'var(--font-size-base)',
+				'lg': 'var(--font-size-lg)',
+				'xl': 'var(--font-size-xl)',
+				'2xl': 'var(--font-size-2xl)',
+				'3xl': 'var(--font-size-3xl)',
+				'4xl': 'var(--font-size-4xl)'
+			},
+			spacing: {
+				'xs': 'var(--spacing-xs)',
+				'sm': 'var(--spacing-sm)',
+				'md': 'var(--spacing-md)',
+				'lg': 'var(--spacing-lg)',
+				'xl': 'var(--spacing-xl)',
+				'2xl': 'var(--spacing-2xl)',
+				'3xl': 'var(--spacing-3xl)',
+				'4xl': 'var(--spacing-4xl)'
 			},
 			transitionTimingFunction: {
-				'smooth': 'var(--transition-smooth)'
+				'smooth': 'var(--transition-smooth)',
+				'fast': 'var(--transition-fast)',
+				'slow': 'var(--transition-slow)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

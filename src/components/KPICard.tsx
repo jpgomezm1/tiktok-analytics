@@ -80,18 +80,19 @@ export const KPICard = ({
 
   return (
     <Card className={cn(
-      "bg-card border-border shadow-card hover:shadow-purple transition-all duration-300",
-      disabled && "opacity-50"
+      "bg-card border-border shadow-card hover:shadow-hover transition-smooth group cursor-pointer",
+      disabled && "opacity-50 cursor-not-allowed",
+      "hover:border-purple-bright/30 hover:bg-card/80"
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-text-secondary flex items-center gap-2">
+        <CardTitle className="text-sm font-medium text-text-secondary flex items-center gap-2 group-hover:text-text-primary transition-fast">
           {title}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={onInfoClick}
-                  className="text-text-muted hover:text-text-secondary transition-colors"
+                  className="text-text-muted hover:text-purple-light transition-fast hover:scale-110 transform"
                   aria-label={`Información sobre ${title}`}
                 >
                   <Info className="w-3 h-3" />
@@ -104,7 +105,7 @@ export const KPICard = ({
           </TooltipProvider>
         </CardTitle>
         {icon && (
-          <div className="h-4 w-4 text-text-muted">
+          <div className="h-4 w-4 text-text-muted group-hover:text-purple-light transition-fast">
             {icon}
           </div>
         )}
