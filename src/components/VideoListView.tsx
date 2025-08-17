@@ -8,7 +8,7 @@ import { ArrowUpDown, ArrowUp, ArrowDown, Play, ExternalLink } from 'lucide-reac
 import { VideoExplorerData } from '@/hooks/useVideoExplorer';
 import { cn } from '@/lib/utils';
 
-type SortField = 'title' | 'views' | 'engagement_rate' | 'retention_rate' | 'saves_per_1k' | 'for_you_percentage' | 'performance_score';
+type SortField = 'title' | 'views' | 'engagement_rate' | 'retention_rate' | 'saves_per_1k' | 'for_you_percentage' | 'viral_index';
 type SortDirection = 'asc' | 'desc';
 
 interface VideoListViewProps {
@@ -157,7 +157,16 @@ export const VideoListView = ({
                 </Tooltip>
               </TooltipProvider>
             </SortableHeader>
-            <SortableHeader field="performance_score">Score</SortableHeader>
+            <SortableHeader field="viral_index">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>Viral Index</TooltipTrigger>
+                  <TooltipContent>
+                    <p>Índice de viralidad: combinación ponderada de métricas (0-10)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </SortableHeader>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -284,7 +293,7 @@ export const VideoListView = ({
                       {performanceBadge.icon}
                     </span>
                     <span className="text-text-primary">
-                      {formatMetric(video.performance_score, 'decimal')}
+                      {formatMetric(video.viral_index, 'decimal')}
                     </span>
                   </div>
                 </TableCell>

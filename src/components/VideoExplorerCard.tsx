@@ -45,7 +45,8 @@ export const VideoExplorerCard = ({
     video.retention_percentile,
     video.saves_percentile,
     video.for_you_percentile,
-    video.engagement_percentile
+    video.engagement_percentile,
+    video.f_per_1k_percentile
   );
 
   const performanceBadge = getPerformanceBadge(overallPerformance);
@@ -66,12 +67,39 @@ export const VideoExplorerCard = ({
             />
           )}
           
-          <Badge 
-            variant={performanceBadge.variant}
-            className="ml-auto"
-          >
-            {performanceBadge.icon} {performanceBadge.label}
-          </Badge>
+          <div className="flex gap-2 ml-auto">
+            {video.is_viral && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge 
+                      variant="default"
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                    >
+                      🚀 Viral
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-center">
+                      <p className="font-semibold mb-1">Video Viral</p>
+                      <p className="text-xs mb-2">Índice: {video.viral_index.toFixed(1)}/10</p>
+                      <p className="text-xs text-muted-foreground">
+                        Un video es viral cuando combina un alto volumen de views 
+                        (mínimo 10K) con métricas de retención, saves y follows 
+                        dentro del top 7% histórico.
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
+            <Badge 
+              variant={performanceBadge.variant}
+            >
+              {performanceBadge.icon} {performanceBadge.label}
+            </Badge>
+          </div>
         </div>
 
         {/* Thumbnail */}

@@ -30,7 +30,9 @@ export interface VideoExplorerData {
   saves_per_1k: number;
   for_you_percentage: number;
   f_per_1k: number;
-  performance_score: number;
+  views_per_1k_followers: number;
+  viral_index: number;
+  is_viral: boolean;
   // Percentiles
   retention_percentile: number;
   saves_percentile: number;
@@ -105,8 +107,17 @@ export const useVideoExplorer = () => {
     return Math.round((rank / sorted.length) * 100);
   };
 
-  const calculateMetrics = (rawVideos: any[]): VideoExplorerData[] => {
-    return rawVideos.map(video => {
+  const calculateZScore = (value: number, values: number[]): number => {
+    if (values.length === 0) return 0;
+    const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+    const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+    const stdDev = Math.sqrt(variance);
+    return stdDev === 0 ? 0 : (value - mean) / stdDev;
+  };
+
+  const calculateMetrics = (rawVideos: any[], userFollowers: number = 1000): VideoExplorerData[] => {
+    // First pass: calculate basic metrics
+    const basicMetrics = rawVideos.map(video => {
       const views = video.views || 0;
       const engagement_rate = views > 0 
         ? ((video.likes + video.comments + video.shares) / views) * 100 
@@ -123,9 +134,9 @@ export const useVideoExplorer = () => {
       const f_per_1k = views > 0 
         ? (video.new_followers / views) * 1000 
         : 0;
-      
-      // Enhanced performance score including F/1k
-      const performance_score = (engagement_rate + retention_rate + saves_per_1k + for_you_percentage + f_per_1k) / 5;
+      const views_per_1k_followers = userFollowers > 0 
+        ? (views / userFollowers) * 1000 
+        : views;
 
       return {
         ...video,
@@ -134,7 +145,46 @@ export const useVideoExplorer = () => {
         saves_per_1k,
         for_you_percentage,
         f_per_1k,
-        performance_score,
+        views_per_1k_followers,
+        viral_index: 0, // Will be calculated in second pass
+        is_viral: false // Will be calculated in second pass
+      };
+    });
+
+    // Extract arrays for z-score calculations
+    const logViews = basicMetrics.map(v => Math.log(Math.max(1, v.views)));
+    const retentions = basicMetrics.map(v => v.retention_rate);
+    const saves = basicMetrics.map(v => v.saves_per_1k);
+    const follows = basicMetrics.map(v => v.f_per_1k);
+    const forYouPercs = basicMetrics.map(v => v.for_you_percentage);
+
+    // Second pass: calculate viral metrics with z-scores
+    return basicMetrics.map(video => {
+      const logViewsValue = Math.log(Math.max(1, video.views));
+      
+      // Calculate z-scores
+      const z_views = calculateZScore(logViewsValue, logViews);
+      const z_retention = calculateZScore(video.retention_rate, retentions);
+      const z_saves_per_1k = calculateZScore(video.saves_per_1k, saves);
+      const z_f_per_1k = calculateZScore(video.f_per_1k, follows);
+      const z_for_you_percentage = calculateZScore(video.for_you_percentage, forYouPercs);
+
+      // Calculate viral index (weighted combination of z-scores)
+      const viral_index = Math.max(0, Math.min(10,
+        0.35 * z_views +
+        0.25 * z_retention +
+        0.15 * z_saves_per_1k +
+        0.15 * z_f_per_1k +
+        0.10 * z_for_you_percentage + 5 // Add 5 to center around 5 instead of 0
+      ));
+
+      // Determine if viral (top 7% + minimum 10K views)
+      const is_viral = viral_index >= 6.5 && video.views >= 10000; // 6.5 ≈ +1.5σ when centered at 5
+
+      return {
+        ...video,
+        viral_index,
+        is_viral,
         retention_percentile: 0, // Will be calculated later
         saves_percentile: 0,
         for_you_percentile: 0,
@@ -174,7 +224,16 @@ export const useVideoExplorer = () => {
 
     setLoading(true);
     try {
-        const { data, error } = await (supabase as any)
+      // Get user profile to fetch follower count
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('total_followers')
+        .eq('id', user.id)
+        .single();
+
+      const userFollowers = profileData?.total_followers || 1000; // Default fallback
+
+      const { data, error } = await (supabase as any)
         .from('videos')
         .select(`
           id, title, image_url, video_url, views, likes, comments, shares, saves, new_followers,
@@ -187,7 +246,7 @@ export const useVideoExplorer = () => {
 
       if (error) throw error;
 
-      const processedVideos = calculateMetrics(data || []);
+      const processedVideos = calculateMetrics(data || [], userFollowers);
       const calculatedPercentiles = calculatePercentiles(processedVideos);
       
       // Add percentiles to videos

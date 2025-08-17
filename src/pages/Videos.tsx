@@ -94,7 +94,7 @@ const Videos = () => {
     // Create CSV content
     const headers = [
       'Título', 'Vistas', 'Engagement %', 'Retención %', 'Saves/1k', '% For You', 
-      'Performance Score', 'Duración (s)', 'Fecha'
+      'Viral Index', 'Duración (s)', 'Fecha'
     ];
     
     const csvContent = [
@@ -106,7 +106,7 @@ const Videos = () => {
         video.retention_rate.toFixed(2),
         video.saves_per_1k.toFixed(2),
         video.for_you_percentage.toFixed(2),
-        video.performance_score.toFixed(2),
+        video.viral_index.toFixed(2),
         video.duration_seconds,
         video.published_date
       ].join(','))
