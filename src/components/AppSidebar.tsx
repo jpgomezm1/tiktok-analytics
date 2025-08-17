@@ -9,7 +9,8 @@ import {
   Sparkles,
   Target,
   Search,
-  Lightbulb
+  Lightbulb,
+  TrendingUp
 } from "lucide-react";
 import {
   Sidebar,
@@ -57,6 +58,11 @@ const menuItems = [
     title: "Content Ideas", 
     url: "/content-ideas", 
     icon: Lightbulb 
+  },
+  { 
+    title: "Analizador Viral", 
+    url: "/viral-analyzer", 
+    icon: TrendingUp 
   },
   { 
     title: "Contexto", 

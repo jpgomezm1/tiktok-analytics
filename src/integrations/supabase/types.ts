@@ -353,6 +353,7 @@ export type Database = {
       }
       tiktok_brain_vectors: {
         Row: {
+          canonical_id: string | null
           cluster_id: string | null
           comments: number | null
           content: string
@@ -367,6 +368,7 @@ export type Database = {
           for_you_pct: number | null
           id: string
           is_duplicate: boolean | null
+          is_representative: boolean | null
           language: string | null
           likes: number | null
           needs_review: boolean | null
@@ -384,6 +386,7 @@ export type Database = {
           views: number | null
         }
         Insert: {
+          canonical_id?: string | null
           cluster_id?: string | null
           comments?: number | null
           content: string
@@ -398,6 +401,7 @@ export type Database = {
           for_you_pct?: number | null
           id?: string
           is_duplicate?: boolean | null
+          is_representative?: boolean | null
           language?: string | null
           likes?: number | null
           needs_review?: boolean | null
@@ -415,6 +419,7 @@ export type Database = {
           views?: number | null
         }
         Update: {
+          canonical_id?: string | null
           cluster_id?: string | null
           comments?: number | null
           content?: string
@@ -429,6 +434,7 @@ export type Database = {
           for_you_pct?: number | null
           id?: string
           is_duplicate?: boolean | null
+          is_representative?: boolean | null
           language?: string | null
           likes?: number | null
           needs_review?: boolean | null
