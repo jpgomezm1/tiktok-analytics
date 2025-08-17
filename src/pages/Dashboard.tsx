@@ -8,7 +8,6 @@ import { KPICard } from '@/components/KPICard';
 import { KPIGlossary } from '@/components/KPIGlossary';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { FollowersChart } from '@/components/FollowersChart';
-import { TopBottomChart } from '@/components/TopBottomChart';
 import { TrafficDonutChart } from '@/components/TrafficDonutChart';
 import { DashboardTour, TourTrigger } from '@/components/tours/DashboardTour';
 import { KPIGridSkeleton } from '@/components/skeletons/KPISkeleton';
@@ -64,7 +63,6 @@ const Dashboard = () => {
 
   const [chartsData, setChartsData] = useState({
     followersTrend: [],
-    topVsBottom: { top: [], bottom: [] },
     trafficDonut: []
   });
 
@@ -85,7 +83,6 @@ const Dashboard = () => {
           forYouShareData,
           initialVelocityData,
           followersTrend,
-          topVsBottom,
           trafficDonut
         ] = await Promise.all([
           kpis.followersNow(),
@@ -95,7 +92,6 @@ const Dashboard = () => {
           kpis.forYouShare(selectedPeriod),
           kpis.initialVelocity(selectedPeriod),
           kpis.charts.followersTrend(selectedPeriod),
-          kpis.charts.topVsBottom(selectedPeriod),
           kpis.charts.trafficDonut(selectedPeriod)
         ]);
 
@@ -110,7 +106,6 @@ const Dashboard = () => {
 
         setChartsData({
           followersTrend,
-          topVsBottom,
           trafficDonut
         });
       } catch (error) {
@@ -331,12 +326,9 @@ const Dashboard = () => {
 
           {/* Charts Section */}
           {hasVideosData && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-xl" data-tour="viral-videos">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl" data-tour="viral-videos">
               {/* Followers Trend */}
               <FollowersChart data={chartsData.followersTrend} loading={loading} />
-              
-              {/* Top vs Bottom Performance */}
-              <TopBottomChart data={chartsData.topVsBottom} loading={loading} />
               
               {/* Traffic Sources */}
               <TrafficDonutChart data={chartsData.trafficDonut} loading={loading} />
