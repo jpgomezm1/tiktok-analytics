@@ -7,7 +7,8 @@ import {
   LogOut,
   User,
   Sparkles,
-  Target
+  Target,
+  Search
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,6 +46,11 @@ const menuItems = [
     title: "Analytics", 
     url: "/analytics", 
     icon: BarChart3 
+  },
+  { 
+    title: "Brain Search", 
+    url: "/brain-search", 
+    icon: Search 
   },
   { 
     title: "Contexto", 

@@ -14,6 +14,7 @@ import Settings from "./pages/Settings";
 import VideoDetail from "./pages/VideoDetail";
 import AIGenerate from "./pages/AIGenerate";
 import AccountContext from "./pages/AccountContext";
+import BrainSearchEngine from "./pages/BrainSearchEngine";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/ai-generate" element={<AppLayout><AIGenerate /></AppLayout>} />
             <Route path="/analytics" element={<AppLayout><Analytics /></AppLayout>} />
             <Route path="/context" element={<AppLayout><AccountContext /></AppLayout>} />
+            <Route path="/brain-search" element={<AppLayout><BrainSearchEngine /></AppLayout>} />
             <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
