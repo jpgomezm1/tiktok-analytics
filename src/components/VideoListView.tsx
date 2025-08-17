@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -225,10 +226,10 @@ export const VideoListView = ({
                 </TableCell>
 
                 <TableCell className="font-medium">
-                  <div className="max-w-xs">
+                  <Link to={`/videos/${video.id}`} className="block max-w-xs hover:text-primary">
                     <p className="truncate text-text-primary">{video.title}</p>
                     <p className="text-xs text-text-muted">{video.duration_seconds}s</p>
-                  </div>
+                  </Link>
                 </TableCell>
 
                 <TableCell className="max-w-xs">

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -53,83 +54,89 @@ export const VideoExplorerCard = ({
 
   return (
     <Card className={cn(
-      "bg-card border-border shadow-card hover:shadow-purple transition-all duration-300 group",
+      "bg-card border-border shadow-card hover:shadow-purple transition-all duration-300 group cursor-pointer",
       isSelected && "ring-2 ring-primary"
     )}>
-      <CardContent className="p-4">
-        {/* Header with selection and performance */}
-        <div className="flex items-start justify-between mb-3">
-          {showSelection && (
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={onSelect}
-              className="mt-1"
-            />
-          )}
-          
-          <div className="flex gap-2 ml-auto">
-            {video.is_viral && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge 
-                      variant="default"
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                    >
-                      🚀 Viral
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="text-center">
-                      <p className="font-semibold mb-1">Video Viral</p>
-                      <p className="text-xs mb-2">Índice: {video.viral_index.toFixed(1)}/10</p>
-                      <p className="text-xs text-muted-foreground">
-                        Un video es viral cuando combina un alto volumen de views 
-                        (mínimo 10K) con métricas de retención, saves y follows 
-                        dentro del top 7% histórico.
-                      </p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+      <Link to={`/videos/${video.id}`} className="block">
+        <CardContent className="p-4">
+          {/* Header with selection and performance */}
+          <div className="flex items-start justify-between mb-3">
+            {showSelection && (
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={onSelect}
+                className="mt-1"
+                onClick={(e) => e.stopPropagation()}
+              />
             )}
             
-            <Badge 
-              variant={performanceBadge.variant}
-            >
-              {performanceBadge.icon} {performanceBadge.label}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Thumbnail */}
-        <div className="relative mb-3 aspect-video bg-muted rounded-lg overflow-hidden">
-          {video.image_url && !imageError ? (
-            <img
-              src={video.image_url}
-              alt={video.title}
-              className="w-full h-full object-cover"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-text-muted">
-              <Play className="w-8 h-8" />
-            </div>
-          )}
-          
-          {/* Overlay actions */}
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            {video.video_url && (
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => window.open(video.video_url, '_blank')}
+            <div className="flex gap-2 ml-auto">
+              {video.is_viral && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge 
+                        variant="default"
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                      >
+                        🚀 Viral
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="text-center">
+                        <p className="font-semibold mb-1">Video Viral</p>
+                        <p className="text-xs mb-2">Índice: {video.viral_index.toFixed(1)}/10</p>
+                        <p className="text-xs text-muted-foreground">
+                          Un video es viral cuando combina un alto volumen de views 
+                          (mínimo 10K) con métricas de retención, saves y follows 
+                          dentro del top 7% histórico.
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              
+              <Badge 
+                variant={performanceBadge.variant}
               >
-                <ExternalLink className="w-4 h-4" />
-              </Button>
-            )}
+                {performanceBadge.icon} {performanceBadge.label}
+              </Badge>
+            </div>
           </div>
-        </div>
+
+          {/* Thumbnail */}
+          <div className="relative mb-3 aspect-video bg-muted rounded-lg overflow-hidden">
+            {video.image_url && !imageError ? (
+              <img
+                src={video.image_url}
+                alt={video.title}
+                className="w-full h-full object-cover"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-text-muted">
+                <Play className="w-8 h-8" />
+              </div>
+            )}
+            
+            {/* Overlay actions */}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              {video.video_url && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.open(video.video_url, '_blank');
+                  }}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
 
         {/* Title */}
         <h3 className="font-semibold text-text-primary mb-2 line-clamp-2 min-h-[2.5rem]">
@@ -246,6 +253,7 @@ export const VideoExplorerCard = ({
           <span>{video.duration_seconds}s</span>
         </div>
       </CardContent>
+    </Link>
     </Card>
   );
 };
