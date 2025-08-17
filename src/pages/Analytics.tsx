@@ -5,10 +5,18 @@ import { InsightCard } from '@/components/InsightCard';
 import { ScoreCard } from '@/components/ScoreCard';
 import { TopBottomChart } from '@/components/TopBottomChart';
 import { PeriodSelector } from '@/components/PeriodSelector';
+import { AdvancedInsightsCard } from '@/components/AdvancedInsightsCard';
+import { ClusterAnalysisCard } from '@/components/ClusterAnalysisCard';
+import { ViralPredictionsCard } from '@/components/ViralPredictionsCard';
+import { PerformanceMatrixCard } from '@/components/PerformanceMatrixCard';
+import { ExecutiveSummaryCard } from '@/components/ExecutiveSummaryCard';
+import { BrainIndexingPrompt } from '@/components/BrainIndexingPrompt';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AnalyticsEngine } from '@/utils/analyticsEngine';
+import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
 import { useKPIs, Period } from '@/hooks/useKPIs';
 import { useState, useMemo, useEffect } from 'react';
 import { 
@@ -30,7 +38,9 @@ import {
   Zap,
   Activity,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Layers,
+  Grid3X3
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -63,6 +73,9 @@ const Analytics = () => {
   const performanceScores = useMemo(() => aiEngine.calculatePerformanceScores(), [aiEngine]);
   const insights = useMemo(() => aiEngine.generateInsights(), [aiEngine]);
   const patterns = useMemo(() => aiEngine.analyzeContentPatterns(), [aiEngine]);
+  
+  // Advanced Analytics Hook
+  const advancedAnalytics = useAdvancedAnalytics(videos);
 
   // Load KPI data
   useEffect(() => {
@@ -444,16 +457,44 @@ const Analytics = () => {
         </Card>
       ) : (
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Resumen</TabsTrigger>
             <TabsTrigger value="performance">Rendimiento</TabsTrigger>
             <TabsTrigger value="correlation">Correlaciones</TabsTrigger>
             <TabsTrigger value="timing">Timing</TabsTrigger>
             <TabsTrigger value="content">Contenido</TabsTrigger>
+            <TabsTrigger value="ai-insights">AI Insights</TabsTrigger>
+            <TabsTrigger value="clustering">Clustering</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
+            {/* Executive Summary */}
+            <ExecutiveSummaryCard 
+              data={{
+                viralReadiness: advancedAnalytics.getViralReadinessScore(),
+                contentDiversity: advancedAnalytics.getContentDiversityScore(),
+                optimizationOpportunities: advancedAnalytics.getOptimizationOpportunities().length,
+                topClusters: advancedAnalytics.getTopClusters().length,
+                highPotentialVideos: advancedAnalytics.getHighPotentialVideos().length,
+                criticalInsights: advancedAnalytics.getCriticalInsights().length,
+                optimalHours: advancedAnalytics.getOptimalPublishingHours().length,
+                contentGaps: advancedAnalytics.getContentGaps().length
+              }}
+              isLoading={advancedAnalytics.loading}
+            />
+
+            {/* Brain Indexing Prompt for Overview if needed */}
+            {advancedAnalytics.hasBrainVectors === false && (
+              <Alert className="border-blue-500/30 bg-blue-500/5">
+                <Brain className="h-4 w-4 text-blue-500" />
+                <AlertDescription className="text-blue-700">
+                  <strong>Analytics Básicos Activos:</strong> Para activar predicciones de viralidad, clustering automático y insights avanzados con IA, 
+                  ve a la tab "AI Insights" y activa el procesamiento inteligente de tu contenido.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <MetricCard
@@ -483,6 +524,38 @@ const Analytics = () => {
                 change={`${analyticsData.avgForYouTraffic.toFixed(1)}% For You`}
                 changeType="neutral"
                 icon={<Users />}
+              />
+            </div>
+
+            {/* Advanced AI Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricCard
+                title="Viral Readiness"
+                value={`${advancedAnalytics.getViralReadinessScore()}%`}
+                change="AI Score"
+                changeType="neutral"
+                icon={<Zap />}
+              />
+              <MetricCard
+                title="Content Clusters"
+                value={advancedAnalytics.getTopClusters().length.toString()}
+                change="Activos con IA"
+                changeType="neutral"
+                icon={<Layers />}
+              />
+              <MetricCard
+                title="High Potential"
+                value={advancedAnalytics.getHighPotentialVideos().length.toString()}
+                change="Videos"
+                changeType="neutral"
+                icon={<TrendingUp />}
+              />
+              <MetricCard
+                title="Critical Insights"
+                value={advancedAnalytics.getCriticalInsights().length.toString()}
+                change="Requieren acción"
+                changeType="neutral"
+                icon={<Brain />}
               />
             </div>
 
@@ -1066,6 +1139,143 @@ const Analytics = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* AI Insights Tab */}
+          <TabsContent value="ai-insights" className="space-y-6">
+            {advancedAnalytics.hasBrainVectors === false ? (
+              <BrainIndexingPrompt 
+                videoCount={videos.length}
+                onIndexingComplete={() => {
+                  advancedAnalytics.refreshAnalytics();
+                }}
+              />
+            ) : (
+              <>
+                {/* Advanced Analytics Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <MetricCard
+                    title="Viral Readiness"
+                    value={`${advancedAnalytics.getViralReadinessScore()}%`}
+                    change="Basado en patterns ML"
+                    changeType="neutral"
+                    icon={<Zap />}
+                  />
+                  <MetricCard
+                    title="Content Diversity"
+                    value={`${advancedAnalytics.getContentDiversityScore()}%`}
+                    change={`${advancedAnalytics.getTopClusters().length} clusters activos`}
+                    changeType="neutral"
+                    icon={<Layers />}
+                  />
+                  <MetricCard
+                    title="Optimization Opportunities"
+                    value={advancedAnalytics.getOptimizationOpportunities().length.toString()}
+                    change="Acciones recomendadas"
+                    changeType="neutral"
+                    icon={<Target />}
+                  />
+                </div>
+
+                {/* Advanced Insights */}
+                <AdvancedInsightsCard 
+                  insights={advancedAnalytics.advancedInsights}
+                  onInsightClick={(insight) => console.log('Insight clicked:', insight)}
+                />
+
+                {/* Viral Predictions */}
+                <ViralPredictionsCard 
+                  predictions={advancedAnalytics.viralPredictions}
+                  onPredictionClick={(prediction) => console.log('Prediction clicked:', prediction)}
+                />
+              </>
+            )}
+          </TabsContent>
+
+          {/* Clustering Tab */}
+          <TabsContent value="clustering" className="space-y-6">
+            {advancedAnalytics.hasBrainVectors === false ? (
+              <BrainIndexingPrompt 
+                videoCount={videos.length}
+                onIndexingComplete={() => {
+                  advancedAnalytics.refreshAnalytics();
+                }}
+              />
+            ) : (
+              <>
+                {/* Cluster Analysis */}
+                <ClusterAnalysisCard 
+                  clusters={advancedAnalytics.clusterAnalysis}
+                  onClusterClick={(cluster) => console.log('Cluster clicked:', cluster)}
+                />
+
+                {/* Performance Matrix */}
+                {advancedAnalytics.performanceMatrix && (
+                  <PerformanceMatrixCard matrix={advancedAnalytics.performanceMatrix} />
+                )}
+              </>
+            )}
+
+            {/* Timing Analysis */}
+            {advancedAnalytics.timingAnalysis && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-orange-500" />
+                    Análisis de Timing Óptimo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Optimal Hours */}
+                    <div>
+                      <h4 className="font-medium text-text-primary mb-3">Mejores Horarios</h4>
+                      <div className="space-y-2">
+                        {advancedAnalytics.getOptimalPublishingHours().map((hour, index) => (
+                          <div key={hour.hour} className="flex items-center justify-between p-2 bg-muted/20 rounded">
+                            <span className="text-sm text-text-secondary">
+                              {hour.hour}:00
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <div className="text-xs text-text-muted">
+                                {hour.video_count} videos
+                              </div>
+                              <Badge variant={index === 0 ? "default" : "outline"} className="text-xs">
+                                {hour.avg_performance.toFixed(0)} score
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Publishing Velocity */}
+                    <div>
+                      <h4 className="font-medium text-text-primary mb-3">Frecuencia de Publicación</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-text-secondary">Actual</span>
+                          <span className="font-medium text-text-primary">
+                            {advancedAnalytics.timingAnalysis.publishing_velocity_analysis.current_frequency}/día
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-text-secondary">Óptima</span>
+                          <span className="font-medium text-primary">
+                            {advancedAnalytics.timingAnalysis.publishing_velocity_analysis.optimal_frequency}/día
+                          </span>
+                        </div>
+                        <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                          <p className="text-sm text-blue-600">
+                            {advancedAnalytics.timingAnalysis.publishing_velocity_analysis.recommendation}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
