@@ -251,67 +251,145 @@ export type Database = {
         }
         Relationships: []
       }
-      tiktok_brain_vectors: {
+      tiktok_brain_clusters: {
         Row: {
-          content: string
-          content_type: string
-          created_at: string | null
-          duration_seconds: number | null
-          embedding: string
-          f_per_1k: number | null
-          for_you_pct: number | null
+          avg_performance: number | null
+          cluster_name: string | null
+          content_type: string | null
+          created_at: string
           id: string
-          published_date: string | null
-          retention_pct: number | null
-          saves_per_1k: number | null
+          representative_vector_id: string | null
+          updated_at: string
           user_id: string
-          video_id: string
-          video_type: string | null
-          views: number | null
+          vector_count: number | null
         }
         Insert: {
-          content: string
-          content_type: string
-          created_at?: string | null
-          duration_seconds?: number | null
-          embedding: string
-          f_per_1k?: number | null
-          for_you_pct?: number | null
+          avg_performance?: number | null
+          cluster_name?: string | null
+          content_type?: string | null
+          created_at?: string
           id?: string
-          published_date?: string | null
-          retention_pct?: number | null
-          saves_per_1k?: number | null
+          representative_vector_id?: string | null
+          updated_at?: string
           user_id: string
-          video_id: string
-          video_type?: string | null
-          views?: number | null
+          vector_count?: number | null
         }
         Update: {
-          content?: string
-          content_type?: string
-          created_at?: string | null
-          duration_seconds?: number | null
-          embedding?: string
-          f_per_1k?: number | null
-          for_you_pct?: number | null
+          avg_performance?: number | null
+          cluster_name?: string | null
+          content_type?: string | null
+          created_at?: string
           id?: string
-          published_date?: string | null
-          retention_pct?: number | null
-          saves_per_1k?: number | null
+          representative_vector_id?: string | null
+          updated_at?: string
           user_id?: string
-          video_id?: string
-          video_type?: string | null
-          views?: number | null
+          vector_count?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "tiktok_brain_vectors_video_id_fkey"
-            columns: ["video_id"]
+            foreignKeyName: "tiktok_brain_clusters_representative_vector_id_fkey"
+            columns: ["representative_vector_id"]
             isOneToOne: false
-            referencedRelation: "videos"
+            referencedRelation: "tiktok_brain_vectors"
             referencedColumns: ["id"]
           },
         ]
+      }
+      tiktok_brain_vectors: {
+        Row: {
+          cluster_id: string | null
+          comments: number | null
+          content: string
+          content_type: string
+          created_at: string
+          cta_type: string | null
+          duration_seconds: number | null
+          editing_style: string | null
+          embedding_en: string | null
+          embedding_es: string | null
+          f_per_1k: number | null
+          for_you_pct: number | null
+          id: string
+          is_duplicate: boolean | null
+          language: string | null
+          likes: number | null
+          needs_review: boolean | null
+          published_date: string | null
+          retention_pct: number | null
+          saves_per_1k: number | null
+          section_tag: string | null
+          shares: number | null
+          similarity_score: number | null
+          tone_style: string | null
+          updated_at: string
+          user_id: string
+          video_id: string
+          video_theme: string | null
+          views: number | null
+        }
+        Insert: {
+          cluster_id?: string | null
+          comments?: number | null
+          content: string
+          content_type: string
+          created_at?: string
+          cta_type?: string | null
+          duration_seconds?: number | null
+          editing_style?: string | null
+          embedding_en?: string | null
+          embedding_es?: string | null
+          f_per_1k?: number | null
+          for_you_pct?: number | null
+          id?: string
+          is_duplicate?: boolean | null
+          language?: string | null
+          likes?: number | null
+          needs_review?: boolean | null
+          published_date?: string | null
+          retention_pct?: number | null
+          saves_per_1k?: number | null
+          section_tag?: string | null
+          shares?: number | null
+          similarity_score?: number | null
+          tone_style?: string | null
+          updated_at?: string
+          user_id: string
+          video_id: string
+          video_theme?: string | null
+          views?: number | null
+        }
+        Update: {
+          cluster_id?: string | null
+          comments?: number | null
+          content?: string
+          content_type?: string
+          created_at?: string
+          cta_type?: string | null
+          duration_seconds?: number | null
+          editing_style?: string | null
+          embedding_en?: string | null
+          embedding_es?: string | null
+          f_per_1k?: number | null
+          for_you_pct?: number | null
+          id?: string
+          is_duplicate?: boolean | null
+          language?: string | null
+          likes?: number | null
+          needs_review?: boolean | null
+          published_date?: string | null
+          retention_pct?: number | null
+          saves_per_1k?: number | null
+          section_tag?: string | null
+          shares?: number | null
+          similarity_score?: number | null
+          tone_style?: string | null
+          updated_at?: string
+          user_id?: string
+          video_id?: string
+          video_theme?: string | null
+          views?: number | null
+        }
+        Relationships: []
       }
       videos: {
         Row: {

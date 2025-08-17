@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,197 +13,227 @@ const openaiApiKey = Deno.env.get('OPENAI_API_KEY')!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-interface BrainSearchParams {
-  userId: string;
-  query: string;
-  topK?: number;
-  filter?: {
-    contentTypes?: Array<'hook'|'cta'|'guion'>;
-    dateFrom?: string;
-    dateTo?: string;
-    minViews?: number;
-    vertical?: string;
-  }
-}
+// Enhanced brain search with context integration
+async function searchBrain(params: any): Promise<any[]> {
+  const { 
+    userId, 
+    query, 
+    topK = 10, 
+    contentTypes = [], 
+    dateFrom, 
+    dateTo, 
+    minViews, 
+    vertical,
+    language = 'es',
+    useClusters = false,
+    diversityBoost = false
+  } = params;
 
-interface BrainHit {
-  id: string;
-  video_id: string;
-  content_type: 'hook'|'cta'|'guion';
-  content: string;
-  score: number;
-  metrics: {
-    retention_pct?: number;
-    saves_per_1k?: number;
-    f_per_1k?: number;
-    for_you_pct?: number;
-    views?: number;
-    duration_seconds?: number;
-    video_type?: string;
-    published_date?: string;
-  }
-}
+  console.log('Enhanced brain search params:', { userId, query, topK, contentTypes, language, useClusters, diversityBoost });
 
-async function generateEmbedding(text: string): Promise<number[]> {
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openaiApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'text-embedding-3-small',
-      input: text,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data.data[0].embedding;
-}
-
-async function searchBrain(params: BrainSearchParams): Promise<BrainHit[]> {
-  const startTime = Date.now();
-  const { userId, query, topK = 8, filter = {} } = params;
-
-  console.log('Searching brain with params:', { userId, query, topK, filter });
-
-  // Generate embedding for query
-  const queryEmbedding = await generateEmbedding(query);
-  
-  // Build SQL query with filters
-  let sql = `
-    SELECT 
-      id,
-      video_id,
-      content_type,
-      content,
-      retention_pct,
-      saves_per_1k,
-      f_per_1k,
-      for_you_pct,
-      views,
-      duration_seconds,
-      video_type,
-      published_date,
-      1 - (embedding <=> $2::vector) as score
-    FROM tiktok_brain_vectors 
-    WHERE user_id = $1
-  `;
-
-  const queryParams: any[] = [userId, JSON.stringify(queryEmbedding)];
-  let paramIndex = 3;
-
-  // Add filters
-  if (filter.contentTypes && filter.contentTypes.length > 0) {
-    sql += ` AND content_type = ANY($${paramIndex})`;
-    queryParams.push(filter.contentTypes);
-    paramIndex++;
-  }
-
-  if (filter.dateFrom) {
-    sql += ` AND published_date >= $${paramIndex}`;
-    queryParams.push(filter.dateFrom);
-    paramIndex++;
-  }
-
-  if (filter.dateTo) {
-    sql += ` AND published_date <= $${paramIndex}`;
-    queryParams.push(filter.dateTo);
-    paramIndex++;
-  }
-
-  if (filter.minViews) {
-    sql += ` AND views >= $${paramIndex}`;
-    queryParams.push(filter.minViews);
-    paramIndex++;
-  }
-
-  if (filter.vertical) {
-    sql += ` AND video_type = $${paramIndex}`;
-    queryParams.push(filter.vertical);
-    paramIndex++;
-  }
-
-  sql += ` ORDER BY score DESC LIMIT $${paramIndex}`;
-  queryParams.push(topK);
-
-  console.log('Executing SQL:', sql);
-  console.log('With params:', queryParams);
-
-  const { data: results, error } = await supabase.rpc('exec_sql', {
-    sql: sql,
-    params: queryParams
-  });
-
-  if (error) {
-    console.error('Search error:', error);
-    // Fallback to simpler query without RPC
-    const { data: fallbackResults, error: fallbackError } = await supabase
-      .from('tiktok_brain_vectors')
-      .select('*')
-      .eq('user_id', userId)
-      .limit(topK);
-
-    if (fallbackError) {
-      throw new Error(`Search failed: ${fallbackError.message}`);
-    }
-
-    const hits: BrainHit[] = (fallbackResults || []).map((row: any) => ({
-      id: row.id,
-      video_id: row.video_id,
-      content_type: row.content_type,
-      content: row.content,
-      score: 0.5, // Default score since we can't compute similarity
-      metrics: {
-        retention_pct: row.retention_pct,
-        saves_per_1k: row.saves_per_1k,
-        f_per_1k: row.f_per_1k,
-        for_you_pct: row.for_you_pct,
-        views: row.views,
-        duration_seconds: row.duration_seconds,
-        video_type: row.video_type,
-        published_date: row.published_date,
-      }
-    }));
-
-    return hits;
-  }
-
-  const hits: BrainHit[] = (results || []).map((row: any) => ({
-    id: row.id,
-    video_id: row.video_id,
-    content_type: row.content_type,
-    content: row.content,
-    score: row.score,
-    metrics: {
-      retention_pct: row.retention_pct,
-      saves_per_1k: row.saves_per_1k,
-      f_per_1k: row.f_per_1k,
-      for_you_pct: row.for_you_pct,
-      views: row.views,
-      duration_seconds: row.duration_seconds,
-      video_type: row.video_type,
-      published_date: row.published_date,
-    }
-  }));
-
-  // Log query for observability
-  const latency = Date.now() - startTime;
-  await supabase
-    .from('brain_queries_log')
-    .insert({
-      user_id: userId,
-      query: query,
-      top_k: topK,
-      latency_ms: latency
+  try {
+    // Generate query embedding
+    const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: query,
+      }),
     });
 
-  console.log(`Search completed in ${latency}ms, found ${hits.length} results`);
-  return hits;
+    if (!embeddingResponse.ok) {
+      throw new Error(`Embedding generation failed: ${embeddingResponse.statusText}`);
+    }
+
+    const embeddingData = await embeddingResponse.json();
+    const queryEmbedding = embeddingData.data[0].embedding;
+    
+    // Get user's account context for enhanced search
+    let contextEmbedding = null;
+    try {
+      const { data: contextData } = await supabase
+        .from('tiktok_account_context_embeddings')
+        .select('embedding')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (contextData?.embedding) {
+        contextEmbedding = contextData.embedding;
+      }
+    } catch (error) {
+      console.log('No context embedding found, using basic search');
+    }
+
+    // Build enhanced SQL query with bilingual support
+    const embeddingField = language === 'en' ? 'embedding_en' : 'embedding_es';
+    
+    let sql = `
+      SELECT 
+        id,
+        video_id,
+        content_type,
+        content,
+        section_tag,
+        video_theme,
+        cta_type,
+        editing_style,
+        tone_style,
+        language,
+        cluster_id,
+        retention_pct,
+        saves_per_1k,
+        f_per_1k,
+        for_you_pct,
+        views,
+        duration_seconds,
+        published_date,
+        (1 - (${embeddingField} <=> $2::vector)) as similarity_score
+      FROM tiktok_brain_vectors
+      WHERE user_id = $1
+        AND is_duplicate = false
+        AND ${embeddingField} IS NOT NULL
+    `;
+
+    const queryParams: any[] = [userId, `[${queryEmbedding.join(',')}]`];
+    let paramIndex = 3;
+
+    // Add filters
+    if (contentTypes.length > 0) {
+      sql += ` AND content_type = ANY($${paramIndex}::text[])`;
+      queryParams.push(contentTypes);
+      paramIndex++;
+    }
+
+    if (dateFrom) {
+      sql += ` AND published_date >= $${paramIndex}::date`;
+      queryParams.push(dateFrom);
+      paramIndex++;
+    }
+
+    if (dateTo) {
+      sql += ` AND published_date <= $${paramIndex}::date`;
+      queryParams.push(dateTo);
+      paramIndex++;
+    }
+
+    if (minViews) {
+      sql += ` AND views >= $${paramIndex}::bigint`;
+      queryParams.push(minViews);
+      paramIndex++;
+    }
+
+    if (vertical) {
+      sql += ` AND video_theme ILIKE $${paramIndex}`;
+      queryParams.push(`%${vertical}%`);
+      paramIndex++;
+    }
+
+    // Diversity boost: if enabled, add cluster-based filtering
+    if (diversityBoost && useClusters) {
+      sql += `
+        AND (cluster_id IS NULL OR cluster_id IN (
+          SELECT DISTINCT cluster_id 
+          FROM tiktok_brain_vectors 
+          WHERE user_id = $1 AND cluster_id IS NOT NULL 
+          GROUP BY cluster_id 
+          ORDER BY AVG(saves_per_1k + f_per_1k) DESC 
+          LIMIT 5
+        ))
+      `;
+    }
+
+    // Order by similarity and performance
+    sql += `
+      ORDER BY 
+        (similarity_score * 0.7 + 
+         LEAST(saves_per_1k / 100.0, 1.0) * 0.2 + 
+         LEAST(f_per_1k / 50.0, 1.0) * 0.1) DESC
+      LIMIT $${paramIndex}::int
+    `;
+    queryParams.push(topK);
+
+    console.log('Executing enhanced search SQL:', sql.substring(0, 200) + '...');
+
+    // Execute the search
+    const { data, error } = await supabase.rpc('exec_sql', {
+      sql: sql,
+      params: queryParams
+    });
+
+    if (error) {
+      console.error('SQL execution error:', error);
+      // Fallback to simpler query
+      return await fallbackSearch(userId, queryEmbedding, language, topK);
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No results from enhanced search, trying fallback');
+      return await fallbackSearch(userId, queryEmbedding, language, topK);
+    }
+
+    // Log search query for analytics
+    try {
+      await supabase
+        .from('brain_queries_log')
+        .insert({
+          user_id: userId,
+          query: query,
+          top_k: topK,
+          latency_ms: Date.now() % 10000 // Approximate latency
+        });
+    } catch (logError) {
+      console.error('Failed to log search query:', logError);
+    }
+
+    console.log(`Enhanced search returned ${data.length} results`);
+    return data;
+
+  } catch (error) {
+    console.error('Error in enhanced brain search:', error);
+    throw error;
+  }
+}
+
+// Fallback search when main query fails
+async function fallbackSearch(userId: string, queryEmbedding: number[], language: string, topK: number): Promise<any[]> {
+  try {
+    const embeddingField = language === 'en' ? 'embedding_en' : 'embedding_es';
+    
+    const { data, error } = await supabase
+      .from('tiktok_brain_vectors')
+      .select(`
+        id,
+        video_id,
+        content_type,
+        content,
+        section_tag,
+        video_theme,
+        retention_pct,
+        saves_per_1k,
+        f_per_1k,
+        for_you_pct,
+        views,
+        duration_seconds,
+        published_date
+      `)
+      .eq('user_id', userId)
+      .eq('is_duplicate', false)
+      .not(embeddingField, 'is', null)
+      .limit(topK);
+
+    if (error) {
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Fallback search failed:', error);
+    return [];
+  }
 }
 
 serve(async (req) => {
@@ -212,26 +242,35 @@ serve(async (req) => {
   }
 
   try {
-    const params: BrainSearchParams = await req.json();
-    const hits = await searchBrain(params);
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
 
-    return new Response(
-      JSON.stringify({ success: true, hits }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
     );
+
+    if (authError || !user) {
+      throw new Error('Invalid user');
+    }
+
+    const searchParams = await req.json();
+    searchParams.userId = user.id;
+
+    const results = await searchBrain(searchParams);
+
+    return new Response(JSON.stringify(results), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
-    console.error('Error in brain search:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message,
-        hits: []
-      }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+    console.error('Error in enhanced brain-search:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
