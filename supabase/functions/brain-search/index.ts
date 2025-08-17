@@ -168,7 +168,7 @@ async function generateBilingualEmbeddings(text: string): Promise<{
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'text-embedding-3-small',
+      model: 'text-embedding-3-large',
       input: text,
     }),
   });
@@ -212,7 +212,7 @@ async function generateBilingualEmbeddings(text: string): Promise<{
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'text-embedding-3-small',
+      model: 'text-embedding-3-large',
       input: translatedText,
     }),
   });
