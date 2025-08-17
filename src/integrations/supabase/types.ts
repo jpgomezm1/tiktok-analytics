@@ -170,6 +170,87 @@ export type Database = {
         }
         Relationships: []
       }
+      tiktok_account_context_embeddings: {
+        Row: {
+          created_at: string
+          embedding: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tiktok_account_contexts: {
+        Row: {
+          audience_personas: Json | null
+          brand_pillars: string[] | null
+          content_themes: string[] | null
+          created_at: string
+          do_not_do: string[] | null
+          id: string
+          mission: string | null
+          negative_keywords: string[] | null
+          north_star_metric: string | null
+          positioning: string | null
+          secondary_metrics: string[] | null
+          strategic_bets: string[] | null
+          tone_guide: string | null
+          updated_at: string
+          user_id: string
+          weights: Json | null
+        }
+        Insert: {
+          audience_personas?: Json | null
+          brand_pillars?: string[] | null
+          content_themes?: string[] | null
+          created_at?: string
+          do_not_do?: string[] | null
+          id?: string
+          mission?: string | null
+          negative_keywords?: string[] | null
+          north_star_metric?: string | null
+          positioning?: string | null
+          secondary_metrics?: string[] | null
+          strategic_bets?: string[] | null
+          tone_guide?: string | null
+          updated_at?: string
+          user_id: string
+          weights?: Json | null
+        }
+        Update: {
+          audience_personas?: Json | null
+          brand_pillars?: string[] | null
+          content_themes?: string[] | null
+          created_at?: string
+          do_not_do?: string[] | null
+          id?: string
+          mission?: string | null
+          negative_keywords?: string[] | null
+          north_star_metric?: string | null
+          positioning?: string | null
+          secondary_metrics?: string[] | null
+          strategic_bets?: string[] | null
+          tone_guide?: string | null
+          updated_at?: string
+          user_id?: string
+          weights?: Json | null
+        }
+        Relationships: []
+      }
       tiktok_brain_vectors: {
         Row: {
           content: string
