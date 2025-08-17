@@ -41,6 +41,62 @@ export type Database = {
         }
         Relationships: []
       }
+      content_ideas_feedback: {
+        Row: {
+          actual_metrics: Json | null
+          created_at: string
+          expected_metrics: Json | null
+          feedback_notes: string | null
+          id: string
+          idea_id: string
+          idea_mode: string
+          idea_text: string
+          idea_type: string
+          outcome: string | null
+          published_video_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_metrics?: Json | null
+          created_at?: string
+          expected_metrics?: Json | null
+          feedback_notes?: string | null
+          id?: string
+          idea_id: string
+          idea_mode: string
+          idea_text: string
+          idea_type: string
+          outcome?: string | null
+          published_video_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_metrics?: Json | null
+          created_at?: string
+          expected_metrics?: Json | null
+          feedback_notes?: string | null
+          id?: string
+          idea_id?: string
+          idea_mode?: string
+          idea_text?: string
+          idea_type?: string
+          outcome?: string | null
+          published_video_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_ideas_feedback_published_video_id_fkey"
+            columns: ["published_video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       followers_history: {
         Row: {
           created_at: string | null

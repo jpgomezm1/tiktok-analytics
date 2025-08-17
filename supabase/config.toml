@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.brain-optimizer]
 verify_jwt = true
+
+[functions.content-ideas]
+verify_jwt = true

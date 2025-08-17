@@ -8,7 +8,8 @@ import {
   User,
   Sparkles,
   Target,
-  Search
+  Search,
+  Lightbulb
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +52,11 @@ const menuItems = [
     title: "Brain Search", 
     url: "/brain-search", 
     icon: Search 
+  },
+  { 
+    title: "Content Ideas", 
+    url: "/content-ideas", 
+    icon: Lightbulb 
   },
   { 
     title: "Contexto", 
