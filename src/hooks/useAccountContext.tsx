@@ -56,9 +56,24 @@ export function useAccountContext() {
       }
     } catch (error) {
       console.error('Error saving context:', error);
+      console.error('Full error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      
+      // Extract more specific error information
+      let errorMessage = "Error al guardar el contexto";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        if ('details' in error) {
+          errorMessage += `: ${error.details}`;
+        }
+        if ('message' in error) {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Error al guardar el contexto",
+        description: errorMessage,
         variant: "destructive"
       });
       return false;

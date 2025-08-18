@@ -54,35 +54,76 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== Account Context Function Started ===');
+    console.log('Request method:', req.method);
+    console.log('Request URL:', req.url);
+    
     const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
     if (!authHeader) {
+      console.log('ERROR: No authorization header');
       throw new Error('No authorization header');
     }
 
+    console.log('Attempting to get user...');
     const { data: { user }, error: authError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
 
-    if (authError || !user) {
+    if (authError) {
+      console.log('Auth error:', authError);
+      throw new Error('Auth error: ' + authError.message);
+    }
+    
+    if (!user) {
+      console.log('ERROR: No user found');
       throw new Error('Invalid user');
     }
+    
+    console.log('User authenticated:', user.id);
 
-    const { action, context } = await req.json();
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log('Request body parsed:', JSON.stringify(requestBody, null, 2));
+    } catch (jsonError) {
+      console.log('JSON parsing error:', jsonError);
+      throw new Error('Invalid JSON in request body');
+    }
+
+    const { action, context } = requestBody;
 
     if (action === 'save') {
+      console.log('=== SAVE ACTION STARTED ===');
       console.log('Saving context for user:', user.id);
       
-      // Generate embedding for the context
-      const embedding = await generateContextEmbedding(context);
+      // TEMPORARY: Skip embedding generation completely
+      console.log('Attempting to save context to database (WITHOUT embedding)...');
       
-      // Save or update the context
+      // Create a clean context object with only the fields we need
+      const cleanContext = {
+        user_id: user.id,
+        mission: context?.mission || null,
+        brand_pillars: context?.brand_pillars || null,
+        positioning: context?.positioning || null,
+        audience_personas: context?.audience_personas || null,
+        do_not_do: context?.do_not_do || null,
+        tone_guide: context?.tone_guide || null,
+        content_themes: context?.content_themes || null,
+        north_star_metric: context?.north_star_metric || null,
+        secondary_metrics: context?.secondary_metrics || null,
+        strategic_bets: context?.strategic_bets || null,
+        negative_keywords: context?.negative_keywords || null,
+        weights: context?.weights || null,
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('Clean context to save:', JSON.stringify(cleanContext, null, 2));
+      
       const { data: contextData, error: contextError } = await supabase
         .from('tiktok_account_contexts')
-        .upsert({
-          user_id: user.id,
-          ...context,
-          updated_at: new Date().toISOString()
-        }, {
+        .upsert(cleanContext, {
           onConflict: 'user_id'
         })
         .select()
@@ -90,25 +131,13 @@ serve(async (req) => {
 
       if (contextError) {
         console.error('Context save error:', contextError);
+        console.error('Context error details:', JSON.stringify(contextError, null, 2));
         throw new Error(`Error saving context: ${contextError.message}`);
       }
 
-      // Save or update the embedding
-      const { error: embeddingError } = await supabase
-        .from('tiktok_account_context_embeddings')
-        .upsert({
-          user_id: user.id,
-          embedding: `[${embedding.join(',')}]`,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (embeddingError) {
-        console.error('Embedding save error:', embeddingError);
-        throw new Error(`Error saving embedding: ${embeddingError.message}`);
-      }
-
+      console.log('Context saved successfully!');
+      console.log('Saved data:', JSON.stringify(contextData, null, 2));
+      
       return new Response(JSON.stringify({ 
         success: true, 
         context: contextData 
@@ -142,9 +171,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in account-context function:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: error.message,
+      details: error.stack || 'No stack trace available'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
