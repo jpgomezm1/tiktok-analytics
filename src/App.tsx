@@ -15,7 +15,7 @@ import VideoDetail from "./pages/VideoDetail";
 import AIGenerate from "./pages/AIGenerate";
 import AccountContext from "./pages/AccountContext";
 import BrainSearchEngine from "./pages/BrainSearchEngine";
-import ContentIdeas from "./pages/ContentIdeas";
+
 import ViralAnalyzer from "./pages/ViralAnalyzer";
 import NotFound from "./pages/NotFound";
 
@@ -38,7 +38,6 @@ const App = () => (
             <Route path="/analytics" element={<AppLayout><Analytics /></AppLayout>} />
             <Route path="/context" element={<AppLayout><AccountContext /></AppLayout>} />
             <Route path="/brain-search" element={<AppLayout><BrainSearchEngine /></AppLayout>} />
-            <Route path="/content-ideas" element={<AppLayout><ContentIdeas /></AppLayout>} />
             <Route path="/viral-analyzer" element={<AppLayout><ViralAnalyzer /></AppLayout>} />
             <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

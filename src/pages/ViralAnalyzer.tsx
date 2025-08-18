@@ -2,27 +2,28 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Copy, TrendingUp, AlertTriangle, Users, Eye, Heart, Brain, Sparkles, Target, Zap, BarChart3, CheckCircle } from 'lucide-react';
-import { useViralAnalyzer, type ViralAnalysisParams } from '@/hooks/useViralAnalyzer';
+import { Copy, TrendingUp, AlertTriangle, CheckCircle2, Target, Zap, BarChart3, Lightbulb, ArrowUp, Eye, Heart, Users, Brain, Sparkles } from 'lucide-react';
+import { useScriptAnalyzer, type ScriptAnalysisParams } from '@/hooks/useScriptAnalyzer';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 export default function ViralAnalyzer() {
-  const [content, setContent] = useState('');
-  const [contentType, setContentType] = useState<'hook' | 'guion' | 'cta'>('hook');
-  const { loading, analysis, analyzeContent } = useViralAnalyzer();
+  const [hook, setHook] = useState('');
+  const [script, setScript] = useState('');
+  const [cta, setCta] = useState('');
+  const { loading, analysis, analyzeScript } = useScriptAnalyzer();
   const { toast } = useToast();
 
   const handleAnalyze = async () => {
-    const params: ViralAnalysisParams = {
-      content: content.trim(),
-      content_type: contentType
+    const params: ScriptAnalysisParams = {
+      hook: hook.trim(),
+      script: script.trim(),
+      cta: cta.trim()
     };
 
-    await analyzeContent(params);
+    await analyzeScript(params);
   };
 
   const copyToClipboard = (text: string) => {
@@ -33,44 +34,27 @@ export default function ViralAnalyzer() {
     });
   };
 
-  const formatPercentage = (value: number) => Math.round(value * 100);
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-500 bg-green-500/10 border-green-500/20';
+    if (score >= 60) return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
+    return 'text-red-500 bg-red-500/10 border-red-500/20';
+  };
 
-  const getContentTypeIcon = (type: string) => {
-    switch (type) {
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'high': return '🔴';
+      case 'medium': return '🟡';
+      case 'low': return '🟢';
+      default: return '⚪';
+    }
+  };
+
+  const getSectionIcon = (section: string) => {
+    switch (section) {
       case 'hook': return '🎯';
-      case 'guion': return '📝';
+      case 'script': return '📝';
       case 'cta': return '✨';
       default: return '💡';
-    }
-  };
-
-  const getViralScore = () => {
-    if (!analysis) return 0;
-    const { probabilities } = analysis.analysis;
-    return Math.round((probabilities.P_top10_views + probabilities.P_saves_p90 + probabilities.P_follow_p90) / 3 * 100);
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 70) return 'green';
-    if (score >= 40) return 'yellow';
-    return 'red';
-  };
-
-  const getVariantIcon = (version: string) => {
-    switch (version) {
-      case 'clickbait': return '🎣';
-      case 'benefit_led': return '💎';
-      case 'contrarian': return '🔄';
-      default: return '💡';
-    }
-  };
-
-  const getVariantColor = (version: string) => {
-    switch (version) {
-      case 'clickbait': return 'red';
-      case 'benefit_led': return 'blue';
-      case 'contrarian': return 'purple';
-      default: return 'gray';
     }
   };
 
@@ -80,20 +64,20 @@ export default function ViralAnalyzer() {
         {/* Enhanced Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-red-500 to-pink-600 rounded-2xl shadow-xl">
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-xl">
               <TrendingUp className="h-8 w-8 text-white" />
             </div>
             <div className="text-left">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-text-primary to-red-light bg-clip-text">
-                Analizador de Potencial Viral
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-text-primary to-purple-light bg-clip-text text-transparent">
+                Analizador de Guiones
               </h1>
               <p className="text-lg text-text-secondary">
-                IA + datos históricos para predecir el éxito
+                Evalúa y mejora tus Hook + Guión + CTA
               </p>
             </div>
           </div>
           <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed">
-            Analiza el potencial viral de tu contenido usando machine learning entrenado con miles de videos exitosos
+            Analiza la estructura completa de tu guión y recibe mejoras específicas y accionables basadas en datos
           </p>
         </div>
 
@@ -106,10 +90,10 @@ export default function ViralAnalyzer() {
               </div>
               <div>
                 <CardTitle className="text-xl font-bold text-text-primary">
-                  Contenido a Analizar
+                  Estructura del Guión
                 </CardTitle>
                 <CardDescription className="text-text-secondary">
-                  Ingresa el hook, guión o CTA que quieres analizar con IA
+                  Ingresa cada componente de tu guión para análisis integral
                 </CardDescription>
               </div>
             </div>
@@ -117,27 +101,39 @@ export default function ViralAnalyzer() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-3">
-                <label className="text-sm font-semibold text-text-primary">Tipo de Contenido</label>
-                <Select value={contentType} onValueChange={(value: any) => setContentType(value)}>
-                  <SelectTrigger className="bg-background/60 border-border/60 focus:border-blue-500/50 transition-all duration-200">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hook">🎯 Hook (Gancho)</SelectItem>
-                    <SelectItem value="guion">📝 Guión</SelectItem>
-                    <SelectItem value="cta">✨ Call to Action</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="md:col-span-2 space-y-3">
-                <label className="text-sm font-semibold text-text-primary">
-                  Contenido {getContentTypeIcon(contentType)}
+                <label className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                  🎯 Hook (Gancho inicial)
                 </label>
                 <Textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder={`Escribe tu ${contentType} aquí... Ejemplo: "¿Sabías que puedes automatizar el 80% de tu trabajo con IA?"`}
+                  value={hook}
+                  onChange={(e) => setHook(e.target.value)}
+                  placeholder="Ej: ¿Sabías que el 90% de emprendedores comete este error fatal?"
+                  rows={4}
+                  className="bg-background/60 border-border/60 focus:border-blue-500/50 transition-all duration-200 resize-none"
+                />
+              </div>
+              
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                  📝 Cuerpo del Guión
+                </label>
+                <Textarea
+                  value={script}
+                  onChange={(e) => setScript(e.target.value)}
+                  placeholder="Desarrollo principal del video, puntos clave, explicaciones..."
+                  rows={4}
+                  className="bg-background/60 border-border/60 focus:border-blue-500/50 transition-all duration-200 resize-none"
+                />
+              </div>
+              
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                  ✨ Call to Action
+                </label>
+                <Textarea
+                  value={cta}
+                  onChange={(e) => setCta(e.target.value)}
+                  placeholder="Ej: Comenta 'QUIERO' si te sirvió este tip"
                   rows={4}
                   className="bg-background/60 border-border/60 focus:border-blue-500/50 transition-all duration-200 resize-none"
                 />
@@ -146,18 +142,18 @@ export default function ViralAnalyzer() {
 
             <Button 
               onClick={handleAnalyze}
-              disabled={loading || !content.trim()}
-              className="w-full py-3 text-lg font-semibold bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 shadow-lg transition-all duration-200"
+              disabled={loading || (!hook.trim() && !script.trim() && !cta.trim())}
+              className="w-full py-3 text-lg font-semibold bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 shadow-lg transition-all duration-200"
             >
               {loading ? (
                 <>
                   <Brain className="h-5 w-5 mr-2 animate-pulse" />
-                  Analizando con IA...
+                  Analizando guión completo...
                 </>
               ) : (
                 <>
                   <TrendingUp className="h-5 w-5 mr-2" />
-                  Analizar Potencial Viral
+                  Analizar Guión Completo
                 </>
               )}
             </Button>
@@ -167,156 +163,173 @@ export default function ViralAnalyzer() {
         {/* Enhanced Results */}
         {analysis && (
           <div className="space-y-8">
-            {/* Enhanced Viral Score */}
-            <Card className="bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm border border-border/60 shadow-xl">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md">
-                      <Target className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-bold text-text-primary">
-                        Score de Viralidad
-                      </CardTitle>
-                      <CardDescription>
-                        Predicción basada en análisis de IA
-                      </CardDescription>
-                    </div>
-                  </div>
-                  {analysis.guardrail_adjusted && (
-                    <Badge className="bg-yellow-500/10 border-yellow-500/20 text-yellow-600">
-                      ⚠️ Contenido ajustado por guardrails
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center space-y-4">
-                  <div className="relative">
-                    <div className={cn(
-                      "text-6xl font-bold mb-2",
-                      getScoreColor(getViralScore()) === 'green' && "text-green-500",
-                      getScoreColor(getViralScore()) === 'yellow' && "text-yellow-500",
-                      getScoreColor(getViralScore()) === 'red' && "text-red-500"
-                    )}>
-                      {getViralScore()}%
-                    </div>
-                    <div className="text-sm text-text-muted">Potencial Viral</div>
-                  </div>
-                  <div className={cn(
-                    "w-full h-3 rounded-full overflow-hidden",
-                    getScoreColor(getViralScore()) === 'green' && "bg-green-500/20",
-                    getScoreColor(getViralScore()) === 'yellow' && "bg-yellow-500/20",
-                    getScoreColor(getViralScore()) === 'red' && "bg-red-500/20"
-                  )}>
-                    <div 
-                      className={cn(
-                        "h-full transition-all duration-1000",
-                        getScoreColor(getViralScore()) === 'green' && "bg-gradient-to-r from-green-500 to-emerald-500",
-                        getScoreColor(getViralScore()) === 'yellow' && "bg-gradient-to-r from-yellow-500 to-orange-500",
-                        getScoreColor(getViralScore()) === 'red' && "bg-gradient-to-r from-red-500 to-red-600"
-                      )}
-                      style={{ width: `${getViralScore()}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Enhanced Probabilities */}
+            {/* Overall Score */}
             <Card className="bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm border border-border/60 shadow-xl">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md">
-                    <BarChart3 className="h-5 w-5 text-white" />
+                  <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md">
+                    <Target className="h-5 w-5 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-bold text-text-primary">
-                    Probabilidades de Éxito
-                  </CardTitle>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-text-primary">
+                      Score General del Guión
+                    </CardTitle>
+                    <CardDescription>
+                      Evaluación integral basada en datos históricos
+                    </CardDescription>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Eye className="h-5 w-5 text-blue-500" />
-                        <span className="text-sm font-semibold text-text-primary">Top 10% Views</span>
-                      </div>
-                      <span className="text-xl font-bold text-blue-500">
-                        {formatPercentage(analysis.analysis.probabilities.P_top10_views)}%
-                      </span>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                  <div className="text-center space-y-2">
+                    <div className={cn("text-4xl font-bold", getScoreColor(analysis.overall_score))}>
+                      {analysis.overall_score}%
                     </div>
-                    <Progress 
-                      value={analysis.analysis.probabilities.P_top10_views * 100} 
-                      className="h-3"
-                    />
-                    <p className="text-xs text-text-muted">
-                      Probabilidad de estar en el top 10% de videos más vistos
-                    </p>
+                    <div className="text-sm text-text-muted">Score General</div>
+                    <Progress value={analysis.overall_score} className="h-2" />
                   </div>
-
-                  <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 border border-purple-500/20 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Heart className="h-5 w-5 text-purple-500" />
-                        <span className="text-sm font-semibold text-text-primary">P90 Saves</span>
-                      </div>
-                      <span className="text-xl font-bold text-purple-500">
-                        {formatPercentage(analysis.analysis.probabilities.P_saves_p90)}%
-                      </span>
+                  
+                  <div className="text-center space-y-2">
+                    <div className={cn("text-2xl font-bold", getScoreColor(analysis.viral_potential.hook_score))}>
+                      {analysis.viral_potential.hook_score}%
                     </div>
-                    <Progress 
-                      value={analysis.analysis.probabilities.P_saves_p90 * 100} 
-                      className="h-3"
-                    />
-                    <p className="text-xs text-text-muted">
-                      Probabilidad de alcanzar percentil 90 en saves
-                    </p>
+                    <div className="text-xs text-text-muted">🎯 Hook</div>
+                    <Progress value={analysis.viral_potential.hook_score} className="h-2" />
                   </div>
-
-                  <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-5 w-5 text-green-500" />
-                        <span className="text-sm font-semibold text-text-primary">P90 Follows</span>
-                      </div>
-                      <span className="text-xl font-bold text-green-500">
-                        {formatPercentage(analysis.analysis.probabilities.P_follow_p90)}%
-                      </span>
+                  
+                  <div className="text-center space-y-2">
+                    <div className={cn("text-2xl font-bold", getScoreColor(analysis.viral_potential.script_score))}>
+                      {analysis.viral_potential.script_score}%
                     </div>
-                    <Progress 
-                      value={analysis.analysis.probabilities.P_follow_p90 * 100} 
-                      className="h-3"
-                    />
-                    <p className="text-xs text-text-muted">
-                      Probabilidad de alcanzar percentil 90 en follows
-                    </p>
+                    <div className="text-xs text-text-muted">📝 Guión</div>
+                    <Progress value={analysis.viral_potential.script_score} className="h-2" />
+                  </div>
+                  
+                  <div className="text-center space-y-2">
+                    <div className={cn("text-2xl font-bold", getScoreColor(analysis.viral_potential.cta_score))}>
+                      {analysis.viral_potential.cta_score}%
+                    </div>
+                    <div className="text-xs text-text-muted">✨ CTA</div>
+                    <Progress value={analysis.viral_potential.cta_score} className="h-2" />
+                  </div>
+                  
+                  <div className="text-center space-y-2">
+                    <div className={cn("text-2xl font-bold", getScoreColor(analysis.viral_potential.coherence_score))}>
+                      {analysis.viral_potential.coherence_score}%
+                    </div>
+                    <div className="text-xs text-text-muted">🔗 Coherencia</div>
+                    <Progress value={analysis.viral_potential.coherence_score} className="h-2" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Enhanced Analysis Insights */}
+            {/* Improvements */}
+            <Card className="bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm border border-border/60 shadow-xl">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-md">
+                    <ArrowUp className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-text-primary">
+                      Mejoras Accionables
+                    </CardTitle>
+                    <CardDescription>
+                      Optimizaciones específicas ordenadas por impacto
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {analysis.improvements.map((improvement, index) => (
+                  <div 
+                    key={index} 
+                    className="bg-gradient-to-br from-muted/40 to-muted/20 rounded-xl p-4 border border-border/30 space-y-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">{getSectionIcon(improvement.section)}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-purple-500/10 border-purple-500/20 text-purple-600">
+                            {improvement.section.toUpperCase()}
+                          </Badge>
+                          <span className="text-lg">{getPriorityIcon(improvement.priority)}</span>
+                          <Badge 
+                            className={cn(
+                              "text-xs",
+                              improvement.priority === 'high' && "bg-red-500/10 border-red-500/20 text-red-600",
+                              improvement.priority === 'medium' && "bg-yellow-500/10 border-yellow-500/20 text-yellow-600",
+                              improvement.priority === 'low' && "bg-green-500/10 border-green-500/20 text-green-600"
+                            )}
+                          >
+                            {improvement.priority.toUpperCase()}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-text-muted">Impacto:</span>
+                        <Badge className="bg-blue-500/10 border-blue-500/20 text-blue-600">
+                          {improvement.impact_score}/10
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold text-red-600">❌ ACTUAL:</label>
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                          <p className="text-sm text-text-primary">{improvement.current_text}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold text-green-600">✅ MEJORADO:</label>
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 relative">
+                          <p className="text-sm text-text-primary">{improvement.improved_text}</p>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => copyToClipboard(improvement.improved_text)}
+                            className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-green-500/20"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <p className="text-sm text-text-secondary">
+                        <span className="font-semibold text-blue-600">💡 ¿Por qué mejorarlo?</span><br />
+                        {improvement.reason}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Strengths and Risks */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Card className="bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm border border-border/60 shadow-xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-md">
-                      <CheckCircle className="h-5 w-5 text-white" />
+                      <CheckCircle2 className="h-5 w-5 text-white" />
                     </div>
                     <CardTitle className="text-lg font-bold text-green-600">
-                      Aspectos Positivos
+                      Fortalezas Detectadas
                     </CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {analysis.analysis.positives.map((positive, index) => (
+                    {analysis.strengths.map((strength, index) => (
                       <div key={index} className="flex items-start gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
                         <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0" />
-                        <span className="text-sm text-text-primary leading-relaxed">{positive}</span>
+                        <span className="text-sm text-text-primary leading-relaxed">{strength}</span>
                       </div>
                     ))}
                   </div>
@@ -336,7 +349,7 @@ export default function ViralAnalyzer() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {analysis.analysis.risks.map((risk, index) => (
+                    {analysis.risks.map((risk, index) => (
                       <div key={index} className="flex items-start gap-3 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
                         <div className="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0" />
                         <span className="text-sm text-text-primary leading-relaxed">{risk}</span>
@@ -347,117 +360,60 @@ export default function ViralAnalyzer() {
               </Card>
             </div>
 
-            {/* Enhanced Variants */}
-            <Card className="bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm border border-border/60 shadow-xl">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md">
-                    <Sparkles className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold text-text-primary">
-                      Variantes Sugeridas
-                    </CardTitle>
-                    <CardDescription>
-                      Diferentes enfoques basados en tu contenido original
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {analysis.variants.map((variant, index) => (
-                  <div 
-                    key={index} 
-                    className="bg-gradient-to-br from-muted/40 to-muted/20 rounded-xl p-4 border border-border/30 space-y-3 hover:shadow-md transition-all duration-200"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">{getVariantIcon(variant.version)}</span>
-                        <div className="flex items-center gap-2">
-                          <Badge 
-                            className={cn(
-                              "text-xs font-semibold px-3 py-1",
-                              getVariantColor(variant.version) === 'red' && "bg-gradient-to-r from-red-500 to-red-600 text-white",
-                              getVariantColor(variant.version) === 'blue' && "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
-                              getVariantColor(variant.version) === 'purple' && "bg-gradient-to-r from-purple-500 to-purple-600 text-white"
-                            )}
-                          >
-                            {variant.version === 'clickbait' ? 'Clickbait' :
-                             variant.version === 'benefit_led' ? 'Basado en Beneficios' : 'Contrario'}
-                          </Badge>
-                          <Badge 
-                            variant={variant.recommended === 'exploit' ? 'destructive' : 'default'}
-                            className="text-xs"
-                          >
-                            {variant.recommended === 'exploit' ? '🎯 Exploit' : '🔬 Explore'}
-                          </Badge>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(variant.text)}
-                        className="hover:border-purple-500/30 hover:text-purple-500 transition-all duration-200"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="bg-background/60 p-3 rounded-lg border border-border/30">
-                      <p className="text-sm font-medium text-text-primary leading-relaxed">{variant.text}</p>
-                    </div>
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                      <p className="text-xs text-text-secondary leading-relaxed">
-                        <span className="font-semibold text-blue-600">💡 Por qué esta variante:</span><br />
-                        {variant.why_variant}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Enhanced Similar Content */}
-            {analysis.analysis.neighbors_used.length > 0 && (
+            {/* Similar Successful Scripts */}
+            {analysis.similar_successful_scripts.length > 0 && (
               <Card className="bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm border border-border/60 shadow-xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-md">
-                      <Zap className="h-5 w-5 text-white" />
+                    <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl shadow-md">
+                      <BarChart3 className="h-5 w-5 text-white" />
                     </div>
                     <div>
                       <CardTitle className="text-xl font-bold text-text-primary">
-                        Contenido Similar Exitoso
+                        Guiones Similares Exitosos
                       </CardTitle>
                       <CardDescription>
-                        Ejemplos históricos usados para el análisis de IA
+                        Referencias de alto rendimiento para inspirarte
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {analysis.analysis.neighbors_used.map((neighbor, index) => (
+                  {analysis.similar_successful_scripts.map((script, index) => (
                     <div 
                       key={index} 
                       className="bg-gradient-to-br from-muted/40 to-muted/20 rounded-xl p-4 border border-border/30 space-y-3"
                     >
-                      <p className="text-sm font-medium text-text-primary leading-relaxed">
-                        "{neighbor.content}"
-                      </p>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div className="text-center p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                          <div className="text-sm font-bold text-purple-400">💾 {neighbor.metrics.saves_per_1k.toFixed(1)}</div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-xs font-semibold text-purple-600">🎯 Hook:</label>
+                          <p className="text-sm text-text-primary bg-purple-500/10 p-2 rounded">{script.hook}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-semibold text-blue-600">📝 Extracto:</label>
+                          <p className="text-sm text-text-primary bg-blue-500/10 p-2 rounded">{script.script_excerpt}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-semibold text-green-600">✨ CTA:</label>
+                          <p className="text-sm text-text-primary bg-green-500/10 p-2 rounded">{script.cta}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-4 gap-3 pt-3 border-t border-border/30">
+                        <div className="text-center p-2 bg-purple-500/10 rounded">
+                          <div className="text-sm font-bold text-purple-400">💾 {script.metrics.saves_per_1k.toFixed(1)}</div>
                           <div className="text-xs text-text-muted">Saves/1k</div>
                         </div>
-                        <div className="text-center p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                          <div className="text-sm font-bold text-green-400">👥 {neighbor.metrics.f_per_1k.toFixed(1)}</div>
+                        <div className="text-center p-2 bg-blue-500/10 rounded">
+                          <div className="text-sm font-bold text-blue-400">👥 {script.metrics.f_per_1k.toFixed(1)}</div>
                           <div className="text-xs text-text-muted">Follows/1k</div>
                         </div>
-                        <div className="text-center p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                          <div className="text-sm font-bold text-blue-400">⏱️ {neighbor.metrics.retention_pct.toFixed(1)}%</div>
+                        <div className="text-center p-2 bg-green-500/10 rounded">
+                          <div className="text-sm font-bold text-green-400">⏱️ {script.metrics.retention_pct.toFixed(0)}%</div>
                           <div className="text-xs text-text-muted">Retención</div>
                         </div>
-                        <div className="text-center p-2 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                          <div className="text-sm font-bold text-orange-400">👁️ {neighbor.metrics.views.toLocaleString()}</div>
+                        <div className="text-center p-2 bg-yellow-500/10 rounded">
+                          <div className="text-sm font-bold text-yellow-400">👀 {(script.metrics.views / 1000).toFixed(0)}k</div>
                           <div className="text-xs text-text-muted">Views</div>
                         </div>
                       </div>
@@ -466,47 +422,38 @@ export default function ViralAnalyzer() {
                 </CardContent>
               </Card>
             )}
-          </div>
-        )}
 
-        {/* Enhanced Empty State */}
-        {!analysis && !loading && (
-          <Card className="border-dashed border-2 border-border/50 bg-gradient-to-br from-muted/20 to-muted/10">
-            <CardContent className="py-16 text-center space-y-6">
-              <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-red-bright/20 to-red-dark/10 rounded-2xl flex items-center justify-center mx-auto">
-                  <TrendingUp className="w-10 h-10 text-red-light" />
-                </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-xl font-bold text-text-primary">
-                  Analiza tu Potencial Viral
-                </h3>
-                <p className="text-text-secondary max-w-lg mx-auto leading-relaxed">
-                  Ingresa tu contenido y descubre qué tan viral puede ser usando análisis de IA entrenado con miles de videos exitosos
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-md mx-auto text-sm">
-                <div className="flex flex-col items-center gap-2 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
-                  <Brain className="w-5 h-5 text-red-400" />
-                  <span className="font-medium text-red-400">Análisis con IA</span>
-                </div>
-                <div className="flex flex-col items-center gap-2 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                  <BarChart3 className="w-5 h-5 text-blue-400" />
-                  <span className="font-medium text-blue-400">Predicciones</span>
-                </div>
-                <div className="flex flex-col items-center gap-2 p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                  <Sparkles className="w-5 h-5 text-purple-400" />
-                  <span className="font-medium text-purple-400">Variantes</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Execution Tips */}
+            {analysis.execution_tips.length > 0 && (
+              <Card className="bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm border border-border/60 shadow-xl">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl shadow-md">
+                      <Lightbulb className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold text-text-primary">
+                        Tips de Ejecución
+                      </CardTitle>
+                      <CardDescription>
+                        Consejos prácticos para maximizar el impacto
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {analysis.execution_tips.map((tip, index) => (
+                      <div key={index} className="flex items-start gap-3 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0" />
+                        <span className="text-sm text-text-primary leading-relaxed">{tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
       </div>
     </div>

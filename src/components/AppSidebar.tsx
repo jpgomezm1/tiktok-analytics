@@ -62,16 +62,16 @@ const menuGroups = [
         shortcut: "G"
       },
       { 
-        title: "Content Ideas", 
-        url: "/content-ideas", 
-        icon: Lightbulb,
-        shortcut: "I"
-      },
-      { 
-        title: "Analizador Viral", 
+        title: "Analizador de Guiones", 
         url: "/viral-analyzer", 
         icon: TrendingUp,
         shortcut: "Z"
+      },
+      { 
+        title: "Brain Search", 
+        url: "/brain-search", 
+        icon: Search,
+        shortcut: "S"
       }
     ]
   },
