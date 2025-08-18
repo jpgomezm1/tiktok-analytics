@@ -267,8 +267,8 @@ const Analytics = () => {
         const publishedDate = new Date(video.published_date + 'T00:00:00');
         
         // If we have a specific time, use it; otherwise distribute intelligently
-        if (video.published_time) {
-          publishedHour = parseInt(video.published_time.split(':')[0]);
+        if ((video as any).published_time) {
+          publishedHour = parseInt((video as any).published_time.split(':')[0]);
         } else {
           // Intelligent distribution based on TikTok best practices and video performance
           const videoScore = (video.views || 0) + (video.likes || 0) * 10 + (video.comments || 0) * 15;
@@ -432,7 +432,7 @@ const Analytics = () => {
 
     // Content type breakdown
     const contentTypeBreakdown = periodVideos.reduce((acc, video) => {
-      const type = video.video_type || 'Sin categorizar';
+      const type = (video as any).video_type || 'Sin categorizar';
       if (!acc[type]) acc[type] = { count: 0, avgViews: 0, totalViews: 0, avgEngagement: 0, totalEngagement: 0 };
       acc[type].count++;
       acc[type].totalViews += video.views || 0;
@@ -714,7 +714,7 @@ const Analytics = () => {
                             fontSize: '12px'
                           }}
                           formatter={(value, name) => [
-                            `${value.toFixed(1)}%`,
+                            `${typeof value === 'number' ? value.toFixed(1) : '0'}%`,
                             'Engagement Rate'
                           ]}
                         />
@@ -835,7 +835,7 @@ const Analytics = () => {
                 <CardContent>
                   <div className="text-lg font-bold text-text-primary">
                     {analyticsData.velocityData.length > 0 
-                      ? Math.round(analyticsData.velocityData.reduce((sum, v) => sum + v.velocity, 0) / analyticsData.velocityData.length).toLocaleString()
+                      ? Math.round(analyticsData.velocityData.map((v: any) => v.velocity || 0).reduce((sum: number, vel: number) => sum + vel, 0) / analyticsData.velocityData.length).toLocaleString()
                       : '0'
                     }
                   </div>
@@ -1201,38 +1201,38 @@ const Analytics = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="text-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
                     <div className="text-xl font-bold text-green-500 mb-1">
-                      {analyticsData.retentionBreakdown.excellent}
+                      {(analyticsData.retentionBreakdown as any)?.excellent || 0}
                     </div>
                     <div className="text-xs text-text-secondary">Excelente</div>
                     <div className="text-xs text-text-muted">≥80%</div>
                   </div>
                   <div className="text-center p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
                     <div className="text-xl font-bold text-blue-500 mb-1">
-                      {analyticsData.retentionBreakdown.good}
+                      {(analyticsData.retentionBreakdown as any)?.good || 0}
                     </div>
                     <div className="text-xs text-text-secondary">Buena</div>
                     <div className="text-xs text-text-muted">60-79%</div>
                   </div>
                   <div className="text-center p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
                     <div className="text-xl font-bold text-yellow-500 mb-1">
-                      {analyticsData.retentionBreakdown.average}
+                      {(analyticsData.retentionBreakdown as any)?.average || 0}
                     </div>
                     <div className="text-xs text-text-secondary">Promedio</div>
                     <div className="text-xs text-text-muted">40-59%</div>
                   </div>
                   <div className="text-center p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
                     <div className="text-xl font-bold text-orange-500 mb-1">
-                      {analyticsData.retentionBreakdown.poor}
+                      {(analyticsData.retentionBreakdown as any)?.poor || 0}
                     </div>
                     <div className="text-xs text-text-secondary">Baja</div>
                     <div className="text-xs text-text-muted">20-39%</div>
                   </div>
                   <div className="text-center p-3 bg-red-500/10 rounded-lg border border-red-500/20">
                     <div className="text-xl font-bold text-red-500 mb-1">
-                      {analyticsData.retentionBreakdown.critical}
+                      {(analyticsData.retentionBreakdown as any)?.critical || 0}
                     </div>
                     <div className="text-xs text-text-secondary">Crítica</div>
                     <div className="text-xs text-text-muted">&lt;20%</div>
@@ -1413,7 +1413,7 @@ const Analytics = () => {
                             fontSize: '12px'
                           }}
                           formatter={(value, name) => [
-                            name === 'avgViews' ? value.toLocaleString() : `${value.toFixed(1)}%`,
+                            name === 'avgViews' ? (typeof value === 'number' ? value.toLocaleString() : '0') : `${typeof value === 'number' ? value.toFixed(1) : '0'}%`,
                             name === 'avgViews' ? 'Avg Views' : 'Avg Engagement'
                           ]}
                         />
