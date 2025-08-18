@@ -17,9 +17,7 @@ const shortcutGroups = [
     title: "AI Tools", 
     shortcuts: [
       { key: "Alt + G", action: "AI Generate" },
-      { key: "Alt + S", action: "Brain Search" },
-      { key: "Alt + I", action: "Content Ideas" },
-      { key: "Alt + Z", action: "Analizador Viral" }
+      { key: "Alt + Z", action: "Analizador de Guiones" }
     ]
   },
   {

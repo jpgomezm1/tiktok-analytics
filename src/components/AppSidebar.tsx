@@ -8,7 +8,7 @@ import {
   User,
   Sparkles,
   Target,
-  Search,
+  
   Lightbulb,
   TrendingUp
 } from "lucide-react";
@@ -66,12 +66,6 @@ const menuGroups = [
         url: "/viral-analyzer", 
         icon: TrendingUp,
         shortcut: "Z"
-      },
-      { 
-        title: "Brain Search", 
-        url: "/brain-search", 
-        icon: Search,
-        shortcut: "S"
       }
     ]
   },
