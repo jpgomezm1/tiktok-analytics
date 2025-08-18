@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,15 @@ import { cn } from '@/lib/utils';
 const AIGenerate = () => {
   const { data: historicalData, loading } = useHistoricalData();
   const [activeTab, setActiveTab] = useState('ideas');
+
+  // Check URL for tab parameter
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam && ['ideas', 'scripts', 'insights'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, []);
 
   const hasData = historicalData && historicalData.videos.length > 0;
 

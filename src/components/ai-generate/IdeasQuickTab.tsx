@@ -322,10 +322,24 @@ export const IdeasQuickTab = ({ historicalData, hasData }: IdeasQuickTabProps) =
                     size="sm"
                     className="w-full gap-2 hover:border-blue-500/30 hover:text-blue-500 transition-all duration-200 group/btn"
                     onClick={() => {
-                      // TODO: Navigate to script generator with this idea
+                      // Navigate to script generator with this idea
+                      const searchParams = new URLSearchParams(window.location.search);
+                      searchParams.set('tab', 'scripts');
+                      searchParams.set('idea', idea.title);
+                      searchParams.set('description', idea.description);
+                      
+                      const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
+                      window.history.pushState({}, '', newUrl);
+                      
+                      // Trigger tab change
+                      const tabTrigger = document.querySelector('[data-state="active"]')?.parentElement?.querySelector('[value="scripts"]') as HTMLElement;
+                      if (tabTrigger) {
+                        tabTrigger.click();
+                      }
+                      
                       toast({
-                        title: "🚀 Próximamente",
-                        description: "Envío a generador de guiones (próxima funcionalidad)"
+                        title: "🎬 Enviado al generador",
+                        description: "Idea transferida para crear guion detallado"
                       });
                     }}
                   >

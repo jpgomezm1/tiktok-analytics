@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,23 @@ export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorT
   const [description, setDescription] = useState('');
   const [useBrain, setUseBrain] = useState(true);
   const [generatedScript, setGeneratedScript] = useState<GeneratedScript | null>(null);
+
+  // Check for URL parameters to pre-fill from ideas tab
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ideaTitle = urlParams.get('idea');
+    const ideaDescription = urlParams.get('description');
+    
+    if (ideaTitle && ideaDescription) {
+      setDescription(`${ideaTitle}\n\n${ideaDescription}`);
+      setVertical('entretenimiento'); // Default vertical
+      
+      // Clear URL parameters
+      urlParams.delete('idea');
+      urlParams.delete('description');
+      window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+    }
+  }, []);
   
   const { generateScript, loading } = useAIGenerate();
   const { toast } = useToast();
