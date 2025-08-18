@@ -2,6 +2,29 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Helper function to calculate cosine similarity
+function calculateCosineSimilarity(vectorA: number[], vectorB: number[]): number {
+  if (!vectorA || !vectorB || vectorA.length !== vectorB.length) {
+    return 0;
+  }
+  
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < vectorA.length; i++) {
+    dotProduct += vectorA[i] * vectorB[i];
+    normA += vectorA[i] * vectorA[i];
+    normB += vectorB[i] * vectorB[i];
+  }
+  
+  if (normA === 0 || normB === 0) {
+    return 0;
+  }
+  
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -316,123 +339,58 @@ async function advancedBrainSearch(userId: string, params: SearchParams): Promis
         date.setDate(date.getDate() - 90);
         filters.dateFrom = date.toISOString().split('T')[0];
       }
-      
-      // Apply negative keywords filter
-      if (accountContext.negative_keywords?.length > 0) {
-        // This would be applied in the SQL query
-      }
     }
     
     // Generate query embeddings
     const { embedding_es, embedding_en } = await generateBilingualEmbeddings(cleanedQuery);
     
-    // Build SQL query with enhanced context integration
-    let sql = `
-      WITH similarity_scores AS (
-        SELECT 
-          *,
-          GREATEST(
-            1 - (embedding_es <=> $2::vector),
-            1 - (embedding_en <=> $3::vector)
-            ${contextEmbedding ? `, 0.25 * (1 - (embedding_es <=> $4::vector)) + 0.75 * GREATEST(1 - (embedding_es <=> $2::vector), 1 - (embedding_en <=> $3::vector))` : ''}
-          ) as sim_final
-        FROM tiktok_brain_vectors
-        WHERE user_id = $1
-          AND is_duplicate = false
-          AND (embedding_es IS NOT NULL OR embedding_en IS NOT NULL)
-    `;
+    console.log('Starting direct query search...');
     
-    const queryParams: any[] = [
-      userId, 
-      `[${embedding_es.join(',')}]`, 
-      `[${embedding_en.join(',')}]`
-    ];
-    let paramIndex = 4;
-    
-    if (contextEmbedding) {
-      queryParams.push(contextEmbedding.embedding);
-      paramIndex++;
-    }
+    // Build base query using Supabase client
+    let query = supabase
+      .from('tiktok_brain_vectors')
+      .select(`
+        *,
+        embedding_es,
+        embedding_en
+      `)
+      .eq('user_id', userId)
+      .eq('is_duplicate', false)
+      .not('embedding_es', 'is', null);
     
     // Apply filters
     if (filters.contentTypes?.length > 0) {
-      sql += ` AND content_type = ANY($${paramIndex}::text[])`;
-      queryParams.push(filters.contentTypes);
-      paramIndex++;
+      query = query.in('content_type', filters.contentTypes);
     }
     
     if (filters.dateFrom) {
-      sql += ` AND published_date >= $${paramIndex}::date`;
-      queryParams.push(filters.dateFrom);
-      paramIndex++;
+      query = query.gte('published_date', filters.dateFrom);
     }
     
     if (filters.dateTo) {
-      sql += ` AND published_date <= $${paramIndex}::date`;
-      queryParams.push(filters.dateTo);
-      paramIndex++;
+      query = query.lte('published_date', filters.dateTo);
     }
     
     if (filters.minViews) {
-      sql += ` AND views >= $${paramIndex}::bigint`;
-      queryParams.push(filters.minViews);
-      paramIndex++;
+      query = query.gte('views', filters.minViews);
     }
     
     if (filters.video_theme) {
-      sql += ` AND video_theme ILIKE $${paramIndex}`;
-      queryParams.push(`%${filters.video_theme}%`);
-      paramIndex++;
+      query = query.ilike('video_theme', `%${filters.video_theme}%`);
     }
     
     if (filters.cta_type) {
-      sql += ` AND cta_type = $${paramIndex}`;
-      queryParams.push(filters.cta_type);
-      paramIndex++;
+      query = query.eq('cta_type', filters.cta_type);
     }
     
     if (filters.editing_style) {
-      sql += ` AND editing_style = $${paramIndex}`;
-      queryParams.push(filters.editing_style);
-      paramIndex++;
+      query = query.eq('editing_style', filters.editing_style);
     }
     
-    if (filters.durationBuckets?.length > 0) {
-      const durationConditions = [];
-      for (const bucket of filters.durationBuckets) {
-        if (bucket === '0-20s') durationConditions.push('duration_seconds <= 20');
-        else if (bucket === '20-40s') durationConditions.push('duration_seconds BETWEEN 21 AND 40');
-        else if (bucket === '40s+') durationConditions.push('duration_seconds > 40');
-      }
-      if (durationConditions.length > 0) {
-        sql += ` AND (${durationConditions.join(' OR ')})`;
-      }
-    }
+    // Limit results for processing
+    query = query.limit((params.topK || 20) * 3);
     
-    // Exclude negative keywords if present
-    if (accountContext?.negative_keywords?.length > 0) {
-      const negativePattern = accountContext.negative_keywords.join('|');
-      sql += ` AND NOT (content ~* $${paramIndex})`;
-      queryParams.push(negativePattern);
-      paramIndex++;
-    }
-    
-    sql += `
-      )
-      SELECT *,
-        EXTRACT(epoch FROM (NOW() - published_date)) / 86400.0 as days_old
-      FROM similarity_scores
-      ORDER BY sim_final DESC
-      LIMIT ${(params.topK || 20) * 2}
-    `;
-    
-    console.log('Executing advanced search SQL...');
-    
-    // Execute search
-    const { data: rawResults, error } = await supabase.rpc('exec_sql', {
-      sql: sql,
-      params: queryParams
-    });
+    const { data: rawResults, error } = await query;
     
     if (error) {
       console.error('Search error:', error);
@@ -459,14 +417,90 @@ async function advancedBrainSearch(userId: string, params: SearchParams): Promis
       };
     }
     
+    console.log(`Found ${rawResults.length} initial results, calculating similarities...`);
+    
+    // Calculate similarities and apply additional filters
+    const scoredResults = rawResults
+      .map((result: any) => {
+        // Calculate semantic similarity
+        let sim_final = 0;
+        
+        if (result.embedding_es && embedding_es) {
+          const sim_es = calculateCosineSimilarity(result.embedding_es, embedding_es);
+          sim_final = Math.max(sim_final, sim_es);
+        }
+        
+        if (result.embedding_en && embedding_en) {
+          const sim_en = calculateCosineSimilarity(result.embedding_en, embedding_en);
+          sim_final = Math.max(sim_final, sim_en);
+        }
+        
+        // Apply duration filter if specified
+        if (filters.durationBuckets?.length > 0) {
+          const duration = result.duration_seconds || 0;
+          const matchesDuration = filters.durationBuckets.some(bucket => {
+            if (bucket === '0-20s') return duration <= 20;
+            if (bucket === '20-40s') return duration >= 21 && duration <= 40;
+            if (bucket === '40s+') return duration > 40;
+            return false;
+          });
+          if (!matchesDuration) {
+            sim_final = 0; // Filter out
+          }
+        }
+        
+        // Apply negative keywords filter
+        if (accountContext?.negative_keywords?.length > 0) {
+          const hasNegativeKeywords = accountContext.negative_keywords.some(keyword =>
+            result.content?.toLowerCase().includes(keyword.toLowerCase())
+          );
+          if (hasNegativeKeywords) {
+            sim_final = sim_final * 0.5; // Penalize but don't completely filter
+          }
+        }
+        
+        const days_old = (Date.now() - new Date(result.published_date).getTime()) / (1000 * 60 * 60 * 24);
+        
+        return {
+          ...result,
+          sim_final,
+          days_old
+        };
+      })
+      .filter(result => result.sim_final > 0.1) // Filter out very low similarity
+      .sort((a, b) => b.sim_final - a.sim_final)
+      .slice(0, params.topK || 20);
+    
+    console.log(`Filtered to ${scoredResults.length} relevant results`);
+    
+    if (scoredResults.length === 0) {
+      return {
+        results: [],
+        facets: {
+          video_themes: [],
+          cta_types: [],
+          editing_styles: [],
+          duration_buckets: [],
+          metrics_percentiles: {
+            retention_pct: { p50: 0, p75: 0, p90: 0 },
+            saves_per_1k: { p50: 0, p75: 0, p90: 0 },
+            f_per_1k: { p50: 0, p75: 0, p90: 0 }
+          }
+        },
+        filters_applied: filters,
+        total_results: 0,
+        search_time_ms: Date.now() - startTime
+      };
+    }
+    
     // Calculate Z-scores for metrics normalization
-    const metricStats = calculateZScores(rawResults, ['retention_pct', 'saves_per_1k', 'f_per_1k', 'for_you_pct']);
+    const metricStats = calculateZScores(scoredResults, ['retention_pct', 'saves_per_1k', 'f_per_1k', 'for_you_pct']);
     
     // Get context weights
     const weights = accountContext?.weights || { retention: 0.3, saves: 0.4, follows: 0.3 };
     
     // Apply advanced reranking
-    const scoredResults = rawResults.map((result: any) => {
+    const rerankedResults = scoredResults.map((result: any) => {
       const z_ret = (result.retention_pct - metricStats.retention_pct.mean) / metricStats.retention_pct.std;
       const z_saves = (result.saves_per_1k - metricStats.saves_per_1k.mean) / metricStats.saves_per_1k.std;
       const z_follows = (result.f_per_1k - metricStats.f_per_1k.mean) / metricStats.f_per_1k.std;
@@ -503,14 +537,14 @@ async function advancedBrainSearch(userId: string, params: SearchParams): Promis
     });
     
     // Sort by final score
-    scoredResults.sort((a, b) => b.score.final_score - a.score.final_score);
+    rerankedResults.sort((a, b) => b.score.final_score - a.score.final_score);
     
     // Apply diversity constraints
     const diverseResults = [];
     const usedClusters = new Set();
     const clusterCounts = new Map();
     
-    for (const result of scoredResults) {
+    for (const result of rerankedResults) {
       const clusterId = result.cluster_id;
       
       if (!clusterId || !usedClusters.has(clusterId)) {
@@ -530,7 +564,7 @@ async function advancedBrainSearch(userId: string, params: SearchParams): Promis
     // Generate explanations and format results
     const finalResults: SearchResult[] = diverseResults.map((result, index) => ({
       video_id: result.video_id,
-      section_tag: result.section_tag,
+      section_tag: result.content_type,
       content: result.content,
       metrics: {
         views: result.views || 0,
@@ -550,13 +584,13 @@ async function advancedBrainSearch(userId: string, params: SearchParams): Promis
     }));
     
     // Generate facets
-    const facets = generateFacets(rawResults);
+    const facets = generateFacets(scoredResults);
     
     return {
       results: finalResults,
       facets,
       filters_applied: filters,
-      total_results: rawResults.length,
+      total_results: scoredResults.length,
       search_time_ms: Date.now() - startTime
     };
     
