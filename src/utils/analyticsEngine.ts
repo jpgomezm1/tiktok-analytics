@@ -96,74 +96,285 @@ export class AnalyticsEngine {
     };
   }
 
-  // Generate AI insights and recommendations
+  // Generate comprehensive AI insights and recommendations
   generateInsights(): AIInsight[] {
     const insights: AIInsight[] = [];
     const patterns = this.analyzeContentPatterns();
+    const scores = this.calculatePerformanceScores();
+    const overallMetrics = this.calculateOverallMetrics();
 
-    // Pattern-based insights
-    const bestTheme = patterns.find(p => p.type === 'theme');
-    if (bestTheme && bestTheme.videoCount >= 2) {
+    // Always generate basic performance insights
+    this.generatePerformanceInsights(insights, scores, overallMetrics);
+    
+    // Content pattern insights
+    this.generateContentPatternInsights(insights, patterns);
+    
+    // Engagement and growth insights
+    this.generateEngagementInsights(insights, overallMetrics);
+    
+    // Optimization opportunities
+    this.generateOptimizationInsights(insights, scores);
+    
+    // Viral potential insights
+    this.generateViralInsights(insights);
+    
+    // Duration and timing insights
+    this.generateTimingInsights(insights);
+
+    return insights.slice(0, 8); // Return top 8 insights
+  }
+
+  private generatePerformanceInsights(insights: AIInsight[], scores: PerformanceScore, overallMetrics: any) {
+    // Overall performance assessment
+    if (scores.overallGrowth >= 75) {
+      insights.push({
+        id: 'high-performance',
+        type: 'pattern',
+        title: 'Excelente rendimiento general',
+        description: `Tu contenido mantiene un alto nivel de calidad con ${scores.overallGrowth}% de score general. Continúa con esta estrategia.`,
+        impact: 'high',
+        confidence: 90,
+        metrics: {
+          improvement: 'Mantener nivel',
+          baseline: `${scores.overallGrowth}% score`
+        }
+      });
+    } else if (scores.overallGrowth >= 50) {
+      insights.push({
+        id: 'moderate-performance',
+        type: 'opportunity',
+        title: 'Oportunidad de crecimiento',
+        description: `Con ${scores.overallGrowth}% de score general, hay margen para optimización. Enfócate en mejorar engagement y retención.`,
+        impact: 'medium',
+        confidence: 85,
+        metrics: {
+          improvement: `+${Math.round((75 - scores.overallGrowth) * 0.8)}% potencial`,
+          baseline: `${scores.overallGrowth}% actual`
+        }
+      });
+    } else {
+      insights.push({
+        id: 'improvement-needed',
+        type: 'strategy',
+        title: 'Requiere optimización urgente',
+        description: `Score de ${scores.overallGrowth}% indica necesidad de cambios estratégicos en tu contenido.`,
+        impact: 'high',
+        confidence: 90,
+        metrics: {
+          improvement: `+${Math.round((60 - scores.overallGrowth) * 1.2)}% objetivo`,
+          baseline: `${scores.overallGrowth}% actual`
+        }
+      });
+    }
+  }
+
+  private generateContentPatternInsights(insights: AIInsight[], patterns: ContentPattern[]) {
+    const bestTheme = patterns.find(p => p.type === 'theme' && p.videoCount >= 2);
+    const bestCTA = patterns.find(p => p.type === 'cta' && p.videoCount >= 2);
+    const bestHook = patterns.find(p => p.type === 'hook_type' && p.videoCount >= 2);
+
+    if (bestTheme) {
       insights.push({
         id: 'best-theme',
         type: 'pattern',
-        title: `${bestTheme.value} content performs best`,
-        description: `Your ${bestTheme.value.toLowerCase()} videos get ${bestTheme.avgEngagement.toFixed(1)}% engagement rate - ${Math.round((bestTheme.improvementPct || 0))}% above average.`,
+        title: `${bestTheme.value} es tu mejor temática`,
+        description: `Tus videos de ${bestTheme.value.toLowerCase()} obtienen ${bestTheme.avgEngagement.toFixed(1)}% de engagement, superando el promedio en ${Math.round(Math.abs(bestTheme.improvementPct || 0))}%.`,
         impact: 'high',
         confidence: Math.min(95, bestTheme.videoCount * 15),
         metrics: {
-          improvement: `+${Math.round(bestTheme.improvementPct || 0)}%`,
+          improvement: `+${Math.round(Math.abs(bestTheme.improvementPct || 0))}%`,
           baseline: `${bestTheme.avgEngagement.toFixed(1)}% engagement`
         }
       });
     }
 
-    const bestCTA = patterns.find(p => p.type === 'cta');
-    if (bestCTA && bestCTA.videoCount >= 2) {
+    if (bestCTA) {
       insights.push({
         id: 'best-cta',
         type: 'recommendation',
-        title: `"${bestCTA.value}" CTA drives most engagement`,
-        description: `Videos with "${bestCTA.value}" call-to-action get ${bestCTA.avgViews.toLocaleString()} average views.`,
+        title: `CTA "${bestCTA.value}" genera más interacción`,
+        description: `Los videos con "${bestCTA.value}" como call-to-action obtienen ${bestCTA.avgViews.toLocaleString()} views promedio.`,
         impact: 'medium',
-        confidence: Math.min(90, bestCTA.videoCount * 12),
+        confidence: Math.min(85, bestCTA.videoCount * 12),
         metrics: {
-          improvement: `+${Math.round(bestCTA.improvementPct || 0)}%`,
-          baseline: `${bestCTA.avgViews.toLocaleString()} avg views`
+          improvement: `+${Math.round(Math.abs(bestCTA.improvementPct || 0))}%`,
+          baseline: `${bestCTA.avgViews.toLocaleString()} views`
         }
       });
     }
 
-    // Monetization opportunities
-    const scores = this.calculatePerformanceScores();
-    if (scores.monetizationReadiness < 60) {
+    if (bestHook) {
       insights.push({
-        id: 'monetization-opportunity',
-        type: 'opportunity',
-        title: 'Improve monetization readiness',
-        description: 'Focus on content that drives profile visits and saves to increase monetization potential.',
+        id: 'best-hook',
+        type: 'recommendation', 
+        title: `Hooks tipo "${bestHook.value}" funcionan mejor`,
+        description: `Este tipo de apertura genera ${bestHook.avgEngagement.toFixed(1)}% de engagement en promedio.`,
+        impact: 'medium',
+        confidence: Math.min(80, bestHook.videoCount * 10),
+        metrics: {
+          improvement: `+${Math.round(Math.abs(bestHook.improvementPct || 0))}%`,
+          baseline: `${bestHook.avgEngagement.toFixed(1)}% engagement`
+        }
+      });
+    }
+  }
+
+  private generateEngagementInsights(insights: AIInsight[], overallMetrics: any) {
+    const avgSaveRate = this.videos.reduce((sum, v) => {
+      return sum + (v.views > 0 ? (v.saves || 0) / v.views * 1000 : 0);
+    }, 0) / Math.max(1, this.videos.length);
+
+    const avgCommentRate = this.videos.reduce((sum, v) => {
+      return sum + (v.views > 0 ? (v.comments || 0) / v.views * 100 : 0);
+    }, 0) / Math.max(1, this.videos.length);
+
+    // Save rate insights
+    if (avgSaveRate >= 15) {
+      insights.push({
+        id: 'high-save-rate',
+        type: 'pattern',
+        title: 'Excelente tasa de guardados',
+        description: `Con ${avgSaveRate.toFixed(1)} saves por 1K views, tu contenido tiene alto valor percibido por la audiencia.`,
         impact: 'high',
-        confidence: 85
+        confidence: 90,
+        metrics: {
+          improvement: 'Mantener calidad',
+          baseline: `${avgSaveRate.toFixed(1)}/1K saves`
+        }
+      });
+    } else if (avgSaveRate < 8) {
+      insights.push({
+        id: 'low-save-rate',
+        type: 'opportunity',
+        title: 'Mejorar contenido guardable',
+        description: `Con ${avgSaveRate.toFixed(1)} saves por 1K, crear más contenido de valor duradero como tutoriales o tips.`,
+        impact: 'medium',
+        confidence: 85,
+        metrics: {
+          improvement: '+50% objetivo',
+          baseline: `${avgSaveRate.toFixed(1)}/1K actual`
+        }
       });
     }
 
-    // Growth strategy insights
-    const viralVideos = this.videos.filter(v => (v.views || 0) > 100000);
+    // Comment rate insights
+    if (avgCommentRate >= 2) {
+      insights.push({
+        id: 'high-comment-rate',
+        type: 'pattern',
+        title: 'Gran generación de conversación',
+        description: `${avgCommentRate.toFixed(1)}% de comment rate indica que tu contenido motiva interacción activa.`,
+        impact: 'high',
+        confidence: 88
+      });
+    }
+  }
+
+  private generateOptimizationInsights(insights: AIInsight[], scores: PerformanceScore) {
+    // Monetization readiness
+    if (scores.monetizationReadiness < 50) {
+      insights.push({
+        id: 'monetization-opportunity',
+        type: 'strategy',
+        title: 'Optimizar para monetización',
+        description: 'Crear contenido que dirija tráfico a tu perfil y genere más saves para aumentar potencial de ingresos.',
+        impact: 'high',
+        confidence: 85,
+        metrics: {
+          improvement: `+${Math.round((70 - scores.monetizationReadiness) * 0.9)}%`,
+          baseline: `${scores.monetizationReadiness}% actual`
+        }
+      });
+    }
+
+    // Viral potential optimization
+    if (scores.viralPotential < 60) {
+      insights.push({
+        id: 'viral-optimization',
+        type: 'opportunity',
+        title: 'Incrementar potencial viral',
+        description: 'Enfócate en hooks más impactantes y contenido con mayor shareabilidad para aumentar alcance orgánico.',
+        impact: 'high',
+        confidence: 80,
+        metrics: {
+          improvement: `+${Math.round((75 - scores.viralPotential) * 0.7)}%`,
+          baseline: `${scores.viralPotential}% actual`
+        }
+      });
+    }
+  }
+
+  private generateViralInsights(insights: AIInsight[]) {
+    const viralVideos = this.videos.filter(v => (v.views || 0) > 50000);
+    const highEngagementVideos = this.videos.filter(v => (v.engagement_rate || 0) > 5);
+    
     if (viralVideos.length > 0) {
+      const viralRate = (viralVideos.length / this.videos.length) * 100;
       const commonTheme = this.getMostCommonValue(viralVideos, 'video_theme');
+      
       if (commonTheme) {
         insights.push({
           id: 'viral-pattern',
           type: 'strategy',
-          title: `${commonTheme} content has viral potential`,
-          description: `${Math.round((viralVideos.length / this.videos.length) * 100)}% of your viral videos are ${commonTheme.toLowerCase()}-themed.`,
+          title: `${commonTheme} tiene potencial viral demostrado`,
+          description: `${viralRate.toFixed(1)}% de tus videos virales son de ${commonTheme.toLowerCase()}. Duplica esta estrategia.`,
           impact: 'high',
-          confidence: 80
+          confidence: 85,
+          metrics: {
+            improvement: `${viralVideos.length}/${this.videos.length} videos`,
+            baseline: `${viralRate.toFixed(1)}% viral rate`
+          }
+        });
+      }
+    } else if (highEngagementVideos.length > 0) {
+      insights.push({
+        id: 'engagement-to-viral',
+        type: 'opportunity',
+        title: 'Convertir engagement en views',
+        description: `Tienes ${highEngagementVideos.length} videos con alto engagement. Optimiza hooks para aumentar alcance.`,
+        impact: 'medium',
+        confidence: 75
+      });
+    }
+  }
+
+  private generateTimingInsights(insights: AIInsight[]) {
+    // Duration analysis
+    const shortVideos = this.videos.filter(v => (v.duration_seconds || 0) < 30);
+    const longVideos = this.videos.filter(v => (v.duration_seconds || 0) > 60);
+    
+    if (shortVideos.length > 0 && longVideos.length > 0) {
+      const shortAvgViews = shortVideos.reduce((sum, v) => sum + (v.views || 0), 0) / shortVideos.length;
+      const longAvgViews = longVideos.reduce((sum, v) => sum + (v.views || 0), 0) / longVideos.length;
+      
+      if (shortAvgViews > longAvgViews * 1.2) {
+        insights.push({
+          id: 'duration-insight',
+          type: 'recommendation',
+          title: 'Videos cortos performan mejor',
+          description: `Tus videos <30s obtienen ${Math.round((shortAvgViews / longAvgViews) * 100 - 100)}% más views que los largos.`,
+          impact: 'medium',
+          confidence: 75,
+          metrics: {
+            improvement: `${Math.round((shortAvgViews / longAvgViews) * 100 - 100)}% más views`,
+            baseline: 'Videos <30s vs >60s'
+          }
+        });
+      } else if (longAvgViews > shortAvgViews * 1.2) {
+        insights.push({
+          id: 'duration-insight',
+          type: 'recommendation',
+          title: 'Contenido largo genera más views',
+          description: `Videos >60s obtienen ${Math.round((longAvgViews / shortAvgViews) * 100 - 100)}% más views. Desarrolla más contenido extenso.`,
+          impact: 'medium',
+          confidence: 75,
+          metrics: {
+            improvement: `${Math.round((longAvgViews / shortAvgViews) * 100 - 100)}% más views`,
+            baseline: 'Videos >60s vs <30s'
+          }
         });
       }
     }
-
-    return insights.slice(0, 6); // Return top 6 insights
   }
 
   // Helper methods
@@ -225,9 +436,19 @@ export class AnalyticsEngine {
   }
 
   private calculateOverallMetrics() {
+    const totalVideos = Math.max(1, this.videos.length);
     return {
-      avgEngagement: this.videos.reduce((sum, v) => sum + (v.engagement_rate || 0), 0) / this.videos.length,
-      avgViews: this.videos.reduce((sum, v) => sum + (v.views || 0), 0) / this.videos.length
+      avgEngagement: this.videos.reduce((sum, v) => sum + (v.engagement_rate || 0), 0) / totalVideos,
+      avgViews: this.videos.reduce((sum, v) => sum + (v.views || 0), 0) / totalVideos,
+      avgSaves: this.videos.reduce((sum, v) => sum + (v.saves || 0), 0) / totalVideos,
+      avgComments: this.videos.reduce((sum, v) => sum + (v.comments || 0), 0) / totalVideos,
+      avgShares: this.videos.reduce((sum, v) => sum + (v.shares || 0), 0) / totalVideos,
+      avgDuration: this.videos.reduce((sum, v) => sum + (v.duration_seconds || 0), 0) / totalVideos,
+      avgRetention: this.videos.reduce((sum, v) => {
+        const duration = v.duration_seconds || 1;
+        const watched = v.avg_time_watched || 0;
+        return sum + (watched / duration) * 100;
+      }, 0) / totalVideos
     };
   }
 

@@ -118,18 +118,9 @@ export const PerformanceTrendsChart = ({ videos }: PerformanceTrendsChartProps) 
             tick={{ fill: 'hsl(var(--text-muted))' }}
           />
           <YAxis 
-            yAxisId="views"
             stroke="hsl(var(--purple-bright))"
             fontSize={12}
             tick={{ fill: 'hsl(var(--text-muted))' }}
-          />
-          <YAxis 
-            yAxisId="engagement"
-            orientation="right"
-            stroke="hsl(var(--success))"
-            fontSize={12}
-            tick={{ fill: 'hsl(var(--text-muted))' }}
-            tickFormatter={(value) => `${value}%`}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend 
@@ -139,7 +130,6 @@ export const PerformanceTrendsChart = ({ videos }: PerformanceTrendsChartProps) 
             }}
           />
           <Line
-            yAxisId="views"
             type="monotone"
             dataKey="views"
             stroke="hsl(var(--purple-bright))"
@@ -147,16 +137,6 @@ export const PerformanceTrendsChart = ({ videos }: PerformanceTrendsChartProps) 
             dot={{ fill: 'hsl(var(--purple-bright))', strokeWidth: 2, r: 4 }}
             activeDot={{ r: 6, stroke: 'hsl(var(--purple-bright))', strokeWidth: 2 }}
             name="Views"
-          />
-          <Line
-            yAxisId="engagement"
-            type="monotone"
-            dataKey="engagementRate"
-            stroke="hsl(var(--success))"
-            strokeWidth={2}
-            dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6, stroke: 'hsl(var(--success))', strokeWidth: 2 }}
-            name="Engagement Rate (%)"
           />
         </LineChart>
       </ResponsiveContainer>
