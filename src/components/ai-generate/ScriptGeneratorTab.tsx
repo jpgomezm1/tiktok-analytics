@@ -6,10 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { FileText, Download, Copy, RefreshCw, Brain } from 'lucide-react';
+import { FileText, Download, Copy, RefreshCw, Brain, Sparkles, Target, Clock, Users, Zap, Play } from 'lucide-react';
 import { useAIGenerate } from '@/hooks/useAIGenerate';
 import { HistoricalData } from '@/hooks/useHistoricalData';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface ScriptGeneratorTabProps {
   historicalData: HistoricalData | null;
@@ -38,17 +39,17 @@ export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorT
   const { toast } = useToast();
 
   const verticals = [
-    { value: 'educacion', label: 'Educación' },
-    { value: 'entretenimiento', label: 'Entretenimiento' },
-    { value: 'vender', label: 'Vender' },
-    { value: 'informativo', label: 'Informativo' },
-    { value: 'otro', label: 'Otro' }
+    { value: 'educacion', label: 'Educación', icon: '📚', color: 'blue' },
+    { value: 'entretenimiento', label: 'Entretenimiento', icon: '🎬', color: 'purple' },
+    { value: 'vender', label: 'Vender', icon: '💰', color: 'green' },
+    { value: 'informativo', label: 'Informativo', icon: '📰', color: 'orange' },
+    { value: 'otro', label: 'Otro', icon: '✨', color: 'gray' }
   ];
 
   const handleGenerate = async () => {
     if (!vertical || !description.trim()) {
       toast({
-        title: "Campos requeridos",
+        title: "⚠️ Campos requeridos",
         description: "Por favor selecciona una vertical y describe el guion",
         variant: "destructive"
       });
@@ -82,7 +83,7 @@ export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorT
           setGeneratedScript(parsed.script);
           
           toast({
-            title: "Guion generado",
+            title: "🎬 Guion generado",
             description: "Claude ha creado tu guion estructurado",
           });
         } catch (parseError) {
@@ -105,7 +106,7 @@ export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorT
           setGeneratedScript(fallbackScript);
           
           toast({
-            title: "Error de formato",
+            title: "⚠️ Error de formato",
             description: "Claude generó contenido pero no pudimos procesarlo correctamente. Revisa los logs del navegador.",
             variant: "destructive"
           });
@@ -116,7 +117,7 @@ export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorT
     } catch (error) {
       console.error('Error generating script:', error);
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: "No pudimos conectar con AI. Intenta de nuevo en unos minutos.",
         variant: "destructive"
       });
@@ -126,7 +127,7 @@ export const ScriptGeneratorTab = ({ historicalData, hasData }: ScriptGeneratorT
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
-      title: "Copiado",
+      title: "📋 Copiado",
       description: "Texto copiado al portapapeles"
     });
   };
@@ -164,115 +165,183 @@ F/1k esperado: ${generatedScript.insights.expected_f1k}
     document.body.removeChild(link);
 
     toast({
-      title: "Guion exportado",
+      title: "📥 Guion exportado",
       description: "Archivo TXT descargado correctamente"
     });
   };
 
+  const selectedVertical = verticals.find(v => v.value === vertical);
+
   return (
-    <div className="space-y-6">
-      {/* Input Form */}
-      <Card className="bg-card border-border shadow-card">
-        <CardHeader>
-          <CardTitle className="text-text-primary flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Genera Guion Estructurado
-          </CardTitle>
-          <CardDescription className="text-text-secondary">
-            {useBrain 
-              ? 'Claude usará tu TikTok Brain para crear guiones basados en tus patrones exitosos'
-              : 'Claude creará un guion con estructura clara optimizada para TikTok'
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-8">
+      {/* Enhanced Input Form */}
+      <Card className="bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm border border-border/60 shadow-xl">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
             <div>
-              <Label htmlFor="vertical">Vertical del contenido</Label>
+              <CardTitle className="text-xl font-bold text-text-primary">
+                Genera Guion Estructurado
+              </CardTitle>
+              <CardDescription className="text-text-secondary">
+                {useBrain 
+                  ? '🧠 Claude usará tu TikTok Brain para crear guiones basados en tus patrones exitosos'
+                  : '✨ Claude creará un guion con estructura clara optimizada para TikTok'
+                }
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Vertical Selection */}
+            <div className="lg:col-span-2 space-y-2">
+              <Label htmlFor="vertical" className="text-sm font-semibold text-text-primary">
+                Vertical del contenido
+              </Label>
               <Select value={vertical} onValueChange={setVertical}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="bg-background/60 border-border/60 focus:border-blue-500/50 transition-all duration-200">
                   <SelectValue placeholder="Selecciona una vertical" />
                 </SelectTrigger>
                 <SelectContent>
                   {verticals.map(v => (
-                    <SelectItem key={v.value} value={v.value}>
-                      {v.label}
+                    <SelectItem key={v.value} value={v.value} className="cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <span>{v.icon}</span>
+                        <span>{v.label}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              
+              {selectedVertical && (
+                <div className={cn(
+                  "p-3 rounded-lg border mt-2",
+                  `bg-${selectedVertical.color}-500/10 border-${selectedVertical.color}-500/20`
+                )}>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-lg">{selectedVertical.icon}</span>
+                    <span className={`font-medium text-${selectedVertical.color}-400`}>
+                      {selectedVertical.label} seleccionado
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border">
-              <div className="flex items-center gap-3">
-                <Brain className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="font-medium text-text-primary">
-                    Usar TikTok Brain
-                  </p>
-                  <p className="text-sm text-text-muted">
-                    Guión basado en tus patrones exitosos
-                  </p>
+            {/* Brain Toggle */}
+            <div className="bg-gradient-to-r from-muted/40 to-muted/20 rounded-xl p-4 border border-border/30">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg">
+                    <Brain className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-text-primary text-sm">
+                      TikTok Brain
+                    </p>
+                    <p className="text-xs text-text-muted">
+                      Patrones exitosos
+                    </p>
+                  </div>
+                  <Switch
+                    checked={useBrain}
+                    onCheckedChange={setUseBrain}
+                    className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-500 data-[state=checked]:to-purple-600"
+                  />
                 </div>
+                
+                {useBrain && hasData && (
+                  <div className="p-2 bg-success/10 rounded-lg border border-success/20">
+                    <div className="flex items-center gap-2 text-success text-xs font-medium">
+                      <Target className="w-3 h-3" />
+                      Activo ({historicalData?.metrics?.video_count || 0} videos)
+                    </div>
+                  </div>
+                )}
               </div>
-              <Switch
-                checked={useBrain}
-                onCheckedChange={setUseBrain}
-              />
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="description">Descripción del guion</Label>
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-semibold text-text-primary">
+              Descripción del guion
+            </Label>
             <Textarea
               id="description"
-              placeholder="ej: un video corto explicando cómo automatizar procesos con IA"
+              placeholder="ej: un video corto explicando cómo automatizar procesos con IA para emprendedores que quieren escalar su negocio sin trabajar más horas"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 min-h-[100px]"
+              className="min-h-[120px] bg-background/60 border-border/60 focus:border-blue-500/50 transition-all duration-200 resize-none"
             />
           </div>
 
           <Button 
             onClick={handleGenerate}
             disabled={loading || !vertical || !description.trim()}
-            className="w-full bg-gradient-primary hover:opacity-90"
+            className={cn(
+              "w-full py-3 text-lg font-semibold shadow-lg transition-all duration-200",
+              useBrain 
+                ? "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700" 
+                : "bg-gradient-primary hover:opacity-90"
+            )}
           >
             {loading ? (
               <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
                 Generando guion con Claude...
               </>
             ) : (
               <>
-                {useBrain ? <Brain className="w-4 h-4 mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
+                {useBrain ? <Brain className="w-5 h-5 mr-2" /> : <FileText className="w-5 h-5 mr-2" />}
                 {useBrain ? 'Generar con TikTok Brain' : 'Generar Guion con AI (Claude)'}
               </>
             )}
           </Button>
 
-          {!useBrain && !hasData && (
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-              <p className="text-sm text-text-secondary">
-                <strong>Tip:</strong> Activa el TikTok Brain para que Claude genere guiones basados en tus patrones de éxito reales.
-              </p>
+          {!useBrain && hasData && (
+            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-yellow-500" />
+                <p className="text-sm text-text-secondary">
+                  <span className="font-semibold text-yellow-600">💡 Tip:</span> Activa el TikTok Brain para que Claude genere guiones basados en tus patrones de éxito reales.
+                </p>
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Generated Script */}
+      {/* Enhanced Generated Script */}
       {generatedScript && (
-        <Card className="bg-card border-border shadow-card">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-text-primary">Guion Generado</CardTitle>
+        <Card className="bg-gradient-to-br from-card/95 to-card/85 backdrop-blur-sm border border-border/60 shadow-xl">
+          <CardHeader className="pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md">
+                  <Play className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold text-text-primary">
+                    Guion Generado
+                  </CardTitle>
+                  <CardDescription className="text-text-secondary">
+                    📏 Estructura optimizada para {generatedScript.estimated_duration}
+                  </CardDescription>
+                </div>
+              </div>
+              
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => copyToClipboard(`${generatedScript.hook}\n\n${generatedScript.development}\n\n${generatedScript.cta}`)}
-                  className="gap-2"
+                  className="gap-2 hover:border-blue-500/30 hover:text-blue-500 transition-all duration-200"
                 >
                   <Copy className="w-4 h-4" />
                   Copiar
@@ -281,73 +350,109 @@ F/1k esperado: ${generatedScript.insights.expected_f1k}
                   variant="outline"
                   size="sm"
                   onClick={exportScript}
-                  className="gap-2"
+                  className="gap-2 hover:border-green-500/30 hover:text-green-500 transition-all duration-200"
                 >
                   <Download className="w-4 h-4" />
                   Exportar TXT
                 </Button>
               </div>
             </div>
-            <CardDescription className="text-text-secondary">
-              Estructura optimizada para {generatedScript.estimated_duration}
-            </CardDescription>
           </CardHeader>
+          
           <CardContent className="space-y-6">
             {/* Hook Section */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Badge className="bg-green-500/10 border-green-500/20 text-green-400">
-                  HOOK (3-5s)
+                <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 shadow-md">
+                  🎯 HOOK (3-5s)
                 </Badge>
+                <div className="flex items-center gap-1 text-xs text-text-muted">
+                  <Clock className="w-3 h-3" />
+                  <span>Primeros segundos críticos</span>
+                </div>
               </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-text-secondary whitespace-pre-wrap">
+              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-xl p-4 shadow-sm">
+                <p className="text-text-primary whitespace-pre-wrap leading-relaxed font-medium">
                   {generatedScript.hook}
                 </p>
               </div>
             </div>
 
             {/* Development Section */}
-            <div className="space-y-2">
-              <Badge className="bg-blue-500/10 border-blue-500/20 text-blue-400">
-                DESARROLLO
-              </Badge>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-text-secondary whitespace-pre-wrap">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 shadow-md">
+                  📖 DESARROLLO
+                </Badge>
+                <div className="flex items-center gap-1 text-xs text-text-muted">
+                  <Users className="w-3 h-3" />
+                  <span>Contenido principal</span>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20 rounded-xl p-4 shadow-sm">
+                <p className="text-text-primary whitespace-pre-wrap leading-relaxed">
                   {generatedScript.development}
                 </p>
               </div>
             </div>
 
             {/* CTA Section */}
-            <div className="space-y-2">
-              <Badge className="bg-purple-500/10 border-purple-500/20 text-purple-400">
-                CTA FINAL
-              </Badge>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-text-secondary whitespace-pre-wrap">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 shadow-md">
+                  🚀 CTA FINAL
+                </Badge>
+                <div className="flex items-center gap-1 text-xs text-text-muted">
+                  <Target className="w-3 h-3" />
+                  <span>Call to action</span>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 border border-purple-500/20 rounded-xl p-4 shadow-sm">
+                <p className="text-text-primary whitespace-pre-wrap leading-relaxed font-medium">
                   {generatedScript.cta}
                 </p>
               </div>
             </div>
 
-            {/* Mini-insights */}
-            <div className="pt-4 border-t border-border">
-              <h4 className="font-medium text-text-primary mb-3">Mini-insights de Claude</h4>
-              <div className="space-y-3">
-                <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+            {/* Enhanced Mini-insights */}
+            <div className="bg-gradient-to-br from-muted/40 to-muted/20 rounded-xl p-6 border border-border/30">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg shadow-md">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <h4 className="text-lg font-bold text-text-primary">
+                  Mini-insights de Claude
+                </h4>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-orange-500/10 to-red-500/5 border border-orange-500/20 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="w-4 h-4 text-orange-500" />
+                    <span className="font-semibold text-orange-600 text-sm">Duración</span>
+                  </div>
                   <p className="text-sm text-text-secondary">
-                    <strong>Duración recomendada:</strong> {generatedScript.insights.duration_recommendation}
+                    {generatedScript.insights.duration_recommendation}
                   </p>
                 </div>
-                <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                
+                <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/5 border border-blue-500/20 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-blue-500" />
+                    <span className="font-semibold text-blue-600 text-sm">Hook Strategy</span>
+                  </div>
                   <p className="text-sm text-text-secondary">
-                    <strong>Estrategia de hook:</strong> {generatedScript.insights.hook_strategy}
+                    {generatedScript.insights.hook_strategy}
                   </p>
                 </div>
-                <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-4 h-4 text-green-500" />
+                    <span className="font-semibold text-green-600 text-sm">F/1k Esperado</span>
+                  </div>
                   <p className="text-sm text-text-secondary">
-                    <strong>F/1k esperado:</strong> {generatedScript.insights.expected_f1k}
+                    {generatedScript.insights.expected_f1k}
                   </p>
                 </div>
               </div>
@@ -356,17 +461,43 @@ F/1k esperado: ${generatedScript.insights.expected_f1k}
         </Card>
       )}
 
-      {/* Empty State */}
+      {/* Enhanced Empty State */}
       {!generatedScript && !loading && (
-        <Card className="border-dashed border-2 border-border">
-          <CardContent className="py-12 text-center">
-            <FileText className="w-12 h-12 text-text-muted mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-text-primary mb-2">
-              Genera tu Guion Estructurado
-            </h3>
-            <p className="text-text-secondary max-w-md mx-auto">
-              Selecciona una vertical, describe tu idea y Claude creará un guion optimizado para TikTok con hook, desarrollo y CTA.
-            </p>
+        <Card className="border-dashed border-2 border-border/50 bg-gradient-to-br from-muted/20 to-muted/10">
+          <CardContent className="py-16 text-center space-y-6">
+            <div className="relative">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-bright/20 to-blue-dark/10 rounded-2xl flex items-center justify-center mx-auto">
+                <FileText className="w-10 h-10 text-blue-light" />
+              </div>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <h3 className="text-xl font-bold text-text-primary">
+                Genera tu Guion Estructurado
+              </h3>
+              <p className="text-text-secondary max-w-lg mx-auto leading-relaxed">
+                Selecciona una vertical, describe tu idea y Claude creará un guion optimizado para TikTok 
+                con hook, desarrollo y CTA basado en mejores prácticas.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-md mx-auto text-sm">
+              <div className="flex flex-col items-center gap-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                <Target className="w-5 h-5 text-green-400" />
+                <span className="font-medium text-green-400">Hook Efectivo</span>
+              </div>
+              <div className="flex flex-col items-center gap-2 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <Users className="w-5 h-5 text-blue-400" />
+                <span className="font-medium text-blue-400">Desarrollo Claro</span>
+              </div>
+              <div className="flex flex-col items-center gap-2 p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                <Zap className="w-5 h-5 text-purple-400" />
+                <span className="font-medium text-purple-400">CTA Poderoso</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}

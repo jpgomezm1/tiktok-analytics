@@ -62,12 +62,6 @@ const menuGroups = [
         shortcut: "G"
       },
       { 
-        title: "Brain Search", 
-        url: "/brain-search", 
-        icon: Search,
-        shortcut: "S"
-      },
-      { 
         title: "Content Ideas", 
         url: "/content-ideas", 
         icon: Lightbulb,

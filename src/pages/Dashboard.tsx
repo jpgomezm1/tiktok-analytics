@@ -27,9 +27,12 @@ import {
   BarChart3, 
   Upload,
   Zap,
-  HelpCircle
+  HelpCircle,
+  Activity,
+  Sparkles
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 const Dashboard = () => {
   const { analytics, loading: videosLoading, videos, addVideo } = useVideos();
@@ -136,14 +139,33 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="space-y-xl">
-        <div className="flex justify-end">
-          <div className="h-10 w-32 bg-muted animate-pulse rounded"></div>
-        </div>
-        <KPIGridSkeleton count={6} />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-xl">
-          <div className="lg:col-span-3">
-            <VideoGridSkeleton count={6} />
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-8">
+            {/* Header Skeleton */}
+            <div className="flex flex-col space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-3">
+                  <div className="h-8 w-64 bg-muted animate-pulse rounded"></div>
+                  <div className="h-4 w-96 bg-muted animate-pulse rounded"></div>
+                </div>
+                <div className="flex items-center space-x-3 mt-4 sm:mt-0">
+                  <div className="h-10 w-32 bg-muted animate-pulse rounded"></div>
+                  <div className="h-10 w-10 bg-muted animate-pulse rounded"></div>
+                  <div className="h-10 w-32 bg-muted animate-pulse rounded"></div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-28 bg-muted animate-pulse rounded"></div>
+                <div className="h-10 w-28 bg-muted animate-pulse rounded"></div>
+              </div>
+            </div>
+            <KPIGridSkeleton count={6} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-3">
+                <VideoGridSkeleton count={6} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -151,231 +173,313 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-xl">
-      {/* Page Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-lg mb-xl">
-        <div className="flex items-center space-x-md" data-tour="period-selector">
-          <PeriodSelector 
-            selectedPeriod={selectedPeriod} 
-            onPeriodChange={handlePeriodChange}
-          />
-          <TourTrigger onStartTour={() => setShowTour(true)} />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowGlossary(true)}
-            className="text-text-secondary border-border hover:bg-muted"
-          >
-            <HelpCircle className="w-4 h-4 mr-2" />
-            ¿Qué significa?
-          </Button>
-        </div>
-      </div>
-      {/* Action Buttons */}
-      <div className="flex items-center space-x-sm">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowAddVideo(true)}
-          className="text-text-secondary border-border hover:bg-muted"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">Agregar Video</span>
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowCSVImport(true)}
-          className="text-text-secondary border-border hover:bg-muted"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">Importar CSV</span>
-        </Button>
-      </div>
-
-      {/* Empty States */}
-      {!hasFollowersData && !hasVideosData ? (
-        <div className="max-w-2xl mx-auto text-center py-12">
-          <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6">
-            <BarChart3 className="w-10 h-10 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-text-primary mb-4">
-            Configura tu Dashboard de KPIs
-          </h2>
-          <p className="text-lg text-text-secondary mb-8">
-            Registra tus seguidores e importa tus videos para desbloquear métricas accionables que impulsen tu crecimiento.
-          </p>
-          <div className="space-y-4">
-            <FollowersUpdateForm />
-            <div className="flex gap-4 justify-center">
-              <Button 
-                onClick={() => setShowAddVideo(true)}
-                className="bg-gradient-primary hover:opacity-90"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Agregar Video
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowCSVImport(true)}
-                className="border-border text-text-secondary"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Importar CSV
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          {!hasFollowersData && (
-            <Card className="bg-card border-border shadow-card border-l-4 border-l-yellow-500">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <Users className="w-5 h-5 text-yellow-500 mt-0.5" />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-text-primary mb-1">
-                      Registra tus seguidores de hoy
-                    </h3>
-                    <p className="text-sm text-text-secondary mb-4">
-                      Para activar los KPIs de seguidores, necesitas registrar tu count actual.
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-8">
+          {/* Enhanced Header Section */}
+          <div className="flex flex-col space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-gradient-primary rounded-xl shadow-lg">
+                    <Activity className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-text-primary to-purple-light bg-clip-text text-transparent">
+                      Analytics Dashboard
+                    </h1>
+                    <p className="text-text-secondary flex items-center space-x-2">
+                      <span>Insights y métricas de rendimiento en tiempo real</span>
+                      <div className="flex items-center space-x-1">
+                        <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-green-500 font-medium">Live</span>
+                      </div>
                     </p>
-                    <FollowersUpdateForm />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+              
+              {/* Enhanced Controls */}
+              <div className="flex items-center space-x-3 mt-4 sm:mt-0" data-tour="period-selector">
+                <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm border border-border rounded-xl px-3 py-2">
+                  <PeriodSelector 
+                    selectedPeriod={selectedPeriod} 
+                    onPeriodChange={handlePeriodChange}
+                  />
+                </div>
+                <TourTrigger onStartTour={() => setShowTour(true)} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowGlossary(true)}
+                  className="text-text-secondary border-border hover:bg-muted hover:border-purple-bright/30 transition-all duration-200 backdrop-blur-sm bg-card/50"
+                >
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  ¿Qué significa?
+                </Button>
+              </div>
+            </div>
 
-          {/* KPIs Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg" data-tour="kpis-grid">
-            <KPICard
-              title="Seguidores actuales"
-              value={kpiData.followersNow?.value || 0}
-              deltaAbs={kpiData.followersNow?.deltaAbs || 0}
-              deltaPct={kpiData.followersNow?.deltaPct || 0}
-              icon={<Users />}
-              tooltip="Último registro en tu historial de seguidores"
-              loading={!kpiData.followersNow}
-              onInfoClick={() => setShowGlossary(true)}
-            />
-            
-            <KPICard
-              title="Nuevos seguidores (hoy)"
-              value={kpiData.newFollowers?.value || 0}
-              deltaAbs={kpiData.newFollowers?.deltaAbs || 0}
-              deltaPct={kpiData.newFollowers?.deltaPct || 0}
-              icon={<UserPlus />}
-              tooltip="Diferencia de seguidores entre hoy y ayer"
-              loading={!kpiData.newFollowers}
-              onInfoClick={() => setShowGlossary(true)}
-            />
-            
-            <KPICard
-              title="Retención media"
-              value={kpiData.retentionAvg?.value || 0}
-              deltaAbs={kpiData.retentionAvg?.deltaAbs || 0}
-              deltaPct={kpiData.retentionAvg?.deltaPct || 0}
-              icon={<Clock />}
-              tooltip="Porcentaje promedio de video que ven los usuarios"
-              format="percentage"
-              loading={!kpiData.retentionAvg}
-              disabled={!hasVideosData}
-              onInfoClick={() => setShowGlossary(true)}
-            />
-            
-            <KPICard
-              title="Saves por 1K vistas"
-              value={kpiData.savesPer1K?.value || 0}
-              deltaAbs={kpiData.savesPer1K?.deltaAbs || 0}
-              deltaPct={kpiData.savesPer1K?.deltaPct || 0}
-              icon={<Heart />}
-              tooltip="Saves por cada 1,000 vistas - indicador de valor"
-              format="decimal"
-              loading={!kpiData.savesPer1K}
-              disabled={!hasVideosData}
-              onInfoClick={() => setShowGlossary(true)}
-            />
-            
-            <KPICard
-              title="% For You"
-              value={kpiData.forYouShare?.value || 0}
-              deltaAbs={kpiData.forYouShare?.deltaAbs || 0}
-              deltaPct={kpiData.forYouShare?.deltaPct || 0}
-              icon={<TrendingUp />}
-              tooltip="Porcentaje de vistas del feed principal For You"
-              format="percentage"
-              loading={!kpiData.forYouShare}
-              disabled={!hasVideosData}
-              onInfoClick={() => setShowGlossary(true)}
-            />
-            
-            <KPICard
-              title="Velocidad inicial"
-              value={kpiData.initialVelocity?.value || 100}
-              deltaAbs={kpiData.initialVelocity?.deltaAbs || 0}
-              deltaPct={kpiData.initialVelocity?.deltaPct || 0}
-              icon={<Zap />}
-              tooltip="Proxy de velocidad inicial vs histórico"
-              format="percentage"
-              loading={!kpiData.initialVelocity}
-              disabled={true} // Always disabled as it's a proxy
-              onInfoClick={() => setShowGlossary(true)}
-            />
+            {/* Enhanced Action Buttons */}
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAddVideo(true)}
+                className="text-text-secondary border-border hover:bg-muted hover:border-purple-bright/30 transition-all duration-200 backdrop-blur-sm bg-card/50 hover:shadow-lg"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Agregar Video</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCSVImport(true)}
+                className="text-text-secondary border-border hover:bg-muted hover:border-purple-bright/30 transition-all duration-200 backdrop-blur-sm bg-card/50 hover:shadow-lg"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Importar CSV</span>
+              </Button>
+            </div>
           </div>
 
-          {/* Charts Section */}
-          {hasVideosData && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl" data-tour="viral-videos">
-              {/* Followers Trend */}
-              <FollowersChart data={chartsData.followersTrend} loading={loading} />
-              
-              {/* Traffic Sources */}
-              <TrafficDonutChart data={chartsData.trafficDonut} loading={loading} />
-            </div>
-          )}
-
-          {/* Recent Videos - Only show if has videos but no specific message needed */}
-          {hasVideosData && analytics && analytics.recentVideos.length > 0 && (
-            <Card className="bg-card border-border shadow-card">
-              <CardHeader>
-                <CardTitle className="text-text-primary">Videos Recientes</CardTitle>
-                <CardDescription className="text-text-secondary">
-                  Rendimiento de tu contenido más reciente
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg" data-tour="ai-insights">
-                  {analytics.recentVideos.slice(0, 6).map((video) => (
-                    <VideoCard key={video.id} video={video} />
-                  ))}
+          {/* Empty States */}
+          {!hasFollowersData && !hasVideosData ? (
+            <div className="max-w-3xl mx-auto text-center py-16">
+              <div className="relative mb-8">
+                <div className="w-24 h-24 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto shadow-2xl">
+                  <BarChart3 className="w-12 h-12 text-white" />
                 </div>
-              </CardContent>
-            </Card>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              <h2 className="text-4xl font-bold text-text-primary mb-4">
+                Configura tu Dashboard de KPIs
+              </h2>
+              <p className="text-xl text-text-secondary mb-12 leading-relaxed">
+                Registra tus seguidores e importa tus videos para desbloquear métricas accionables que impulsen tu crecimiento.
+              </p>
+              <div className="space-y-6">
+                <div className="bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-6">
+                  <FollowersUpdateForm />
+                </div>
+                <div className="flex gap-4 justify-center">
+                  <Button 
+                    onClick={() => setShowAddVideo(true)}
+                    className="bg-gradient-primary hover:opacity-90 shadow-lg hover:shadow-xl transition-all duration-200 px-8 py-3"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Video
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowCSVImport(true)}
+                    className="border-border text-text-secondary hover:bg-muted hover:border-purple-bright/30 transition-all duration-200 px-8 py-3"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Importar CSV
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {!hasFollowersData && (
+                <Card className="bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-sm border border-border/50 shadow-xl border-l-4 border-l-yellow-500 hover:shadow-2xl transition-all duration-300">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 bg-yellow-500/20 rounded-xl">
+                        <Users className="w-6 h-6 text-yellow-500" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-text-primary mb-2 text-lg">
+                          Registra tus seguidores de hoy
+                        </h3>
+                        <p className="text-text-secondary mb-6 leading-relaxed">
+                          Para activar los KPIs de seguidores, necesitas registrar tu count actual.
+                        </p>
+                        <div className="bg-card/50 rounded-xl p-4">
+                          <FollowersUpdateForm />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Enhanced KPIs Grid */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <h2 className="text-2xl font-bold text-text-primary">Métricas Clave</h2>
+                  <div className="h-1 flex-1 bg-gradient-to-r from-purple-bright/50 to-transparent rounded-full"></div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-tour="kpis-grid">
+                  <div className="transform hover:scale-105 transition-all duration-200">
+                    <KPICard
+                      title="Seguidores actuales"
+                      value={kpiData.followersNow?.value || 0}
+                      deltaAbs={kpiData.followersNow?.deltaAbs || 0}
+                      deltaPct={kpiData.followersNow?.deltaPct || 0}
+                      icon={<Users />}
+                      tooltip="Último registro en tu historial de seguidores"
+                      loading={!kpiData.followersNow}
+                      onInfoClick={() => setShowGlossary(true)}
+                    />
+                  </div>
+                  
+                  <div className="transform hover:scale-105 transition-all duration-200">
+                    <KPICard
+                      title="Nuevos seguidores (hoy)"
+                      value={kpiData.newFollowers?.value || 0}
+                      deltaAbs={kpiData.newFollowers?.deltaAbs || 0}
+                      deltaPct={kpiData.newFollowers?.deltaPct || 0}
+                      icon={<UserPlus />}
+                      tooltip="Diferencia de seguidores entre hoy y ayer"
+                      loading={!kpiData.newFollowers}
+                      onInfoClick={() => setShowGlossary(true)}
+                    />
+                  </div>
+                  
+                  <div className="transform hover:scale-105 transition-all duration-200">
+                    <KPICard
+                      title="Retención media"
+                      value={kpiData.retentionAvg?.value || 0}
+                      deltaAbs={kpiData.retentionAvg?.deltaAbs || 0}
+                      deltaPct={kpiData.retentionAvg?.deltaPct || 0}
+                      icon={<Clock />}
+                      tooltip="Porcentaje promedio de video que ven los usuarios"
+                      format="percentage"
+                      loading={!kpiData.retentionAvg}
+                      disabled={!hasVideosData}
+                      onInfoClick={() => setShowGlossary(true)}
+                    />
+                  </div>
+                  
+                  <div className="transform hover:scale-105 transition-all duration-200">
+                    <KPICard
+                      title="Saves por 1K vistas"
+                      value={kpiData.savesPer1K?.value || 0}
+                      deltaAbs={kpiData.savesPer1K?.deltaAbs || 0}
+                      deltaPct={kpiData.savesPer1K?.deltaPct || 0}
+                      icon={<Heart />}
+                      tooltip="Saves por cada 1,000 vistas - indicador de valor"
+                      format="decimal"
+                      loading={!kpiData.savesPer1K}
+                      disabled={!hasVideosData}
+                      onInfoClick={() => setShowGlossary(true)}
+                    />
+                  </div>
+                  
+                  <div className="transform hover:scale-105 transition-all duration-200">
+                    <KPICard
+                      title="% For You"
+                      value={kpiData.forYouShare?.value || 0}
+                      deltaAbs={kpiData.forYouShare?.deltaAbs || 0}
+                      deltaPct={kpiData.forYouShare?.deltaPct || 0}
+                      icon={<TrendingUp />}
+                      tooltip="Porcentaje de vistas del feed principal For You"
+                      format="percentage"
+                      loading={!kpiData.forYouShare}
+                      disabled={!hasVideosData}
+                      onInfoClick={() => setShowGlossary(true)}
+                    />
+                  </div>
+                  
+                  <div className="transform hover:scale-105 transition-all duration-200">
+                    <KPICard
+                      title="Velocidad inicial"
+                      value={kpiData.initialVelocity?.value || 100}
+                      deltaAbs={kpiData.initialVelocity?.deltaAbs || 0}
+                      deltaPct={kpiData.initialVelocity?.deltaPct || 0}
+                      icon={<Zap />}
+                      tooltip="Proxy de velocidad inicial vs histórico"
+                      format="percentage"
+                      loading={!kpiData.initialVelocity}
+                      disabled={true}
+                      onInfoClick={() => setShowGlossary(true)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Enhanced Charts Section */}
+              {hasVideosData && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <h2 className="text-2xl font-bold text-text-primary">Tendencias</h2>
+                    <div className="h-1 flex-1 bg-gradient-to-r from-blue-500/50 to-transparent rounded-full"></div>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" data-tour="viral-videos">
+                    <div className="transform hover:scale-[1.02] transition-all duration-300">
+                      <FollowersChart data={chartsData.followersTrend} loading={loading} />
+                    </div>
+                    
+                    <div className="transform hover:scale-[1.02] transition-all duration-300">
+                      <TrafficDonutChart data={chartsData.trafficDonut} loading={loading} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Enhanced Recent Videos */}
+              {hasVideosData && analytics && analytics.recentVideos.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <h2 className="text-2xl font-bold text-text-primary">Videos Recientes</h2>
+                    <div className="h-1 flex-1 bg-gradient-to-r from-green-500/50 to-transparent rounded-full"></div>
+                  </div>
+                  <Card className="bg-gradient-to-br from-card/80 to-card/60 backdrop-blur-sm border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-text-primary flex items-center space-x-2">
+                        <TrendingUp className="w-5 h-5" />
+                        <span>Rendimiento Reciente</span>
+                      </CardTitle>
+                      <CardDescription className="text-text-secondary">
+                        Análisis del contenido más reciente y su performance
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-tour="ai-insights">
+                        {analytics.recentVideos.slice(0, 6).map((video, index) => (
+                          <div 
+                            key={video.id}
+                            className="transform hover:scale-105 transition-all duration-200"
+                            style={{ animationDelay: `${index * 100}ms` }}
+                          >
+                            <VideoCard video={video} />
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
 
-      {/* Glossary Panel */}
-      <KPIGlossary open={showGlossary} onClose={() => setShowGlossary(false)} />
+          {/* Glossary Panel */}
+          <KPIGlossary open={showGlossary} onClose={() => setShowGlossary(false)} />
 
-      {/* Tour */}
-      <DashboardTour
-        isActive={showTour}
-        onComplete={() => setShowTour(false)}
-        onSkip={() => setShowTour(false)}
-      />
+          {/* Tour */}
+          <DashboardTour
+            isActive={showTour}
+            onComplete={() => setShowTour(false)}
+            onSkip={() => setShowTour(false)}
+          />
 
-      {/* Modals */}
-      <CSVImportModal
-        open={showCSVImport}
-        onClose={() => setShowCSVImport(false)}
-        onImport={async (videosData) => {
-          for (const video of videosData) {
-            await addVideo(video);
-          }
-        }}
-      />
+          {/* Modals */}
+          <CSVImportModal
+            open={showCSVImport}
+            onClose={() => setShowCSVImport(false)}
+            onImport={async (videosData) => {
+              for (const video of videosData) {
+                await addVideo(video);
+              }
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 };
