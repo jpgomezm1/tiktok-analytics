@@ -55,24 +55,41 @@ interface ScriptAnalysisResult {
 
 // Get account context for guardrails and strategic alignment
 async function getAccountContext(userId: string): Promise<any> {
-  const { data: context } = await supabase
-    .from('tiktok_account_contexts')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
+  try {
+    const { data: context } = await supabase
+      .from('tiktok_account_contexts')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-  return context || {
-    mission: 'No definida',
-    brand_pillars: [],
-    positioning: 'No definido',
-    content_themes: [],
-    tone_guide: 'Profesional pero accesible',
-    north_star_metric: 'engagement',
-    strategic_bets: [],
-    do_not_do: [],
-    negative_keywords: [],
-    weights: { retention: 0.3, saves: 0.5, follows: 0.2, fyp: 0.0 }
-  };
+    console.log('Account context loaded:', !!context);
+    return context || {
+      mission: 'No definida',
+      brand_pillars: [],
+      positioning: 'No definido',
+      content_themes: [],
+      tone_guide: 'Profesional pero accesible',
+      north_star_metric: 'engagement',
+      strategic_bets: [],
+      do_not_do: [],
+      negative_keywords: [],
+      weights: { retention: 0.3, saves: 0.5, follows: 0.2, fyp: 0.0 }
+    };
+  } catch (error) {
+    console.error('Error loading account context:', error);
+    return {
+      mission: 'No definida',
+      brand_pillars: [],
+      positioning: 'No definido',
+      content_themes: [],
+      tone_guide: 'Profesional pero accesible',
+      north_star_metric: 'engagement',
+      strategic_bets: [],
+      do_not_do: [],
+      negative_keywords: [],
+      weights: { retention: 0.3, saves: 0.5, follows: 0.2, fyp: 0.0 }
+    };
+  }
 }
 
 // Get successful scripts from brain vectors for reference
@@ -255,24 +272,47 @@ Responde SOLO con JSON válido en este formato:
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-5-2025-08-07',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `Analiza este guión completo:\n\n${scriptText}` }
       ],
-      max_completion_tokens: 3000
+      max_tokens: 3000,
+      temperature: 0.7
     }),
   });
 
   if (!response.ok) {
+    console.error('OpenAI API Error:', response.status, response.statusText);
     throw new Error(`OpenAI API error: ${response.statusText}`);
   }
 
   const data = await response.json();
+  console.log('OpenAI Response:', JSON.stringify(data, null, 2));
+  
   const aiResponse = data.choices[0].message.content;
+  console.log('AI Response Content:', aiResponse);
   
   try {
-    const parsed = JSON.parse(aiResponse);
+    // Clean the response to ensure it's valid JSON
+    let cleanedResponse = aiResponse.trim();
+    
+    // Remove any markdown code blocks if present
+    if (cleanedResponse.startsWith('```json')) {
+      cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedResponse.startsWith('```')) {
+      cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    console.log('Cleaned Response:', cleanedResponse);
+    
+    const parsed = JSON.parse(cleanedResponse);
+    
+    // Validate the structure
+    if (!parsed.overall_score && parsed.overall_score !== 0) {
+      console.error('Invalid response structure - missing overall_score');
+      throw new Error('Invalid AI response structure');
+    }
     
     // Enrich with actual successful scripts from database
     parsed.similar_successful_scripts = successfulScripts.slice(0, 3).map(script => ({
@@ -287,25 +327,66 @@ Responde SOLO con JSON válido en este formato:
       }
     }));
     
+    console.log('Successfully parsed and enriched response');
     return parsed;
-  } catch (error) {
-    console.error('Error parsing AI response:', error);
-    throw new Error('Failed to parse AI analysis response');
+  } catch (parseError) {
+    console.error('Error parsing AI response:', parseError);
+    console.error('Raw AI response was:', aiResponse);
+    
+    // Return a fallback response if parsing fails
+    return {
+      overall_score: 50,
+      viral_potential: {
+        hook_score: 50,
+        script_score: 50,
+        cta_score: 50,
+        coherence_score: 50
+      },
+      improvements: [
+        {
+          section: 'script',
+          current_text: params.script || 'N/A',
+          improved_text: 'Error al generar mejora - intenta de nuevo',
+          reason: 'No se pudo procesar la respuesta de IA',
+          impact_score: 5,
+          priority: 'medium'
+        }
+      ],
+      strengths: ['Error al analizar fortalezas'],
+      risks: ['Error al procesar la respuesta de IA'],
+      similar_successful_scripts: successfulScripts.slice(0, 2).map(script => ({
+        hook: script.hook || 'No disponible',
+        script_excerpt: script.script_content?.substring(0, 100) + '...' || 'No disponible',
+        cta: script.cta || 'No disponible',
+        metrics: {
+          saves_per_1k: script.saves_per_1k || 0,
+          f_per_1k: script.f_per_1k || 0,
+          retention_pct: script.retention_pct || 0,
+          views: script.views || 0
+        }
+      })),
+      execution_tips: ['Intenta analizar de nuevo - hubo un error temporal']
+    };
   }
 }
 
 // Main analyzer function
 async function analyzeScript(userId: string, params: ScriptAnalysisParams): Promise<ScriptAnalysisResult> {
   try {
+    console.log('Starting script analysis for user:', userId);
+    console.log('Params:', JSON.stringify(params, null, 2));
+    
     // Get account context
     const context = await getAccountContext(userId);
     
     // Get successful scripts for reference
     const successfulScripts = await getSuccessfulScripts(userId);
+    console.log('Found successful scripts:', successfulScripts.length);
     
     // Generate comprehensive analysis
     const analysis = await analyzeScriptWithAI(userId, params, context, successfulScripts);
     
+    console.log('Analysis completed successfully');
     return analysis;
     
   } catch (error) {
