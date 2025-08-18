@@ -158,7 +158,7 @@ export const useAdvancedAnalytics = (videos: Video[]) => {
   const getContentDiversityScore = () => {
     if (hasBrainVectors === false) {
       // Fallback calculation based on video types and themes
-      const uniqueTypes = new Set(videos.map(v => v.video_type).filter(Boolean));
+      const uniqueTypes = new Set(videos.map(v => v.video_type || 'default').filter(Boolean));
       const uniqueThemes = new Set(videos.map(v => v.video_theme).filter(Boolean));
       const typeScore = Math.min(40, uniqueTypes.size * 10);
       const themeScore = Math.min(40, uniqueThemes.size * 8);

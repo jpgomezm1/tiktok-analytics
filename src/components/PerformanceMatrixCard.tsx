@@ -10,7 +10,8 @@ import {
   Minus,
   Play,
   BookmarkPlus,
-  Activity
+  Activity,
+  Eye
 } from 'lucide-react';
 import { 
   ScatterChart, 
@@ -101,7 +102,7 @@ export const PerformanceMatrixCard = ({ matrix }: PerformanceMatrixCardProps) =>
                 />
                 <Scatter 
                   dataKey="saves_per_1k" 
-                  fill={(entry) => getQuadrantColor(entry.payload?.quadrant || '')}
+                  fill="#3b82f6"
                 />
                 {matrix.retention_vs_saves.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={getQuadrantColor(entry.quadrant)} />

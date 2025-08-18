@@ -112,11 +112,11 @@ export class OptimizedAnalyticsService {
       
       const result = data?.[0] || {};
       return {
-        viral_score: Math.round(result.viral_score || 0),
-        content_consistency_score: Math.round(result.content_consistency_score || 0),
-        growth_velocity: Math.round(result.growth_velocity || 0),
-        monetization_readiness: Math.round(result.monetization_readiness || 0),
-        audience_retention_quality: Math.round(result.audience_retention_quality || 0)
+        viral_score: Math.round((result as any).viral_score || 0),
+        content_consistency_score: Math.round((result as any).content_consistency_score || 0),
+        growth_velocity: Math.round((result as any).growth_velocity || 0),
+        monetization_readiness: Math.round((result as any).monetization_readiness || 0),
+        audience_retention_quality: Math.round((result as any).audience_retention_quality || 0)
       };
     } catch (error) {
       console.error('Error getting optimized metrics:', error);
@@ -315,10 +315,10 @@ export class OptimizedAnalyticsService {
       
       if (error) throw error;
 
-      const result = data?.[0]?.analysis_data || {};
-      const viralThemes = result.viral_themes || [];
-      const optimalTiming = result.optimal_timing || [];
-      const themeSaturation = result.theme_saturation || [];
+      const result = data?.[0] || {};
+      const viralThemes = (result as any).viral_themes || [];
+      const optimalTiming = (result as any).optimal_timing || [];
+      const themeSaturation = (result as any).theme_saturation || [];
 
       // Calculate next viral probability based on recent patterns
       const viralRate = viralThemes.length > 0 
