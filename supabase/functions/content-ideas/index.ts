@@ -105,7 +105,7 @@ async function getHighPerformingExamples(userId: string, type: string, query?: s
   return examples || [];
 }
 
-// Generate ideas using OpenAI
+// Generate ideas using OpenAI with enhanced context integration
 async function generateIdeasWithAI(
   userId: string,
   params: GenerateIdeasParams,
@@ -114,12 +114,17 @@ async function generateIdeasWithAI(
   learningData: any
 ): Promise<ContentIdea[]> {
   
-  const systemPrompt = `Eres un experto en creación de contenido viral para TikTok. Tu trabajo es generar ideas ${params.type} que:
+  const systemPrompt = `Eres un experto en creación de contenido viral para TikTok especializado en el contexto de esta cuenta específica. Tu trabajo es generar ideas ${params.type} que:
 
-1. Estén alineadas con el contexto de la cuenta:
+1. ESTÉN PERFECTAMENTE ALINEADAS con el contexto de la cuenta:
    - Misión: ${accountContext?.mission || 'No definida'}
+   - Pilares de marca: ${accountContext?.brand_pillars?.join(', ') || 'No definidos'}
+   - Posicionamiento: ${accountContext?.positioning || 'No definido'}
    - Temas de contenido: ${accountContext?.content_themes?.join(', ') || 'Generales'}
-   - Tono: ${accountContext?.tone_guide || 'Profesional pero accesible'}
+   - Guía de tono: ${accountContext?.tone_guide || 'Profesional pero accesible'}
+   - Métrica principal: ${accountContext?.north_star_metric || 'engagement'}
+   - Apuestas estratégicas: ${accountContext?.strategic_bets?.join(', ') || 'No definidas'}
+   - NUNCA uses estas palabras/conceptos: ${accountContext?.negative_keywords?.join(', ') || 'Ninguna restricción'}
    - NO hacer: ${accountContext?.do_not_do?.join(', ') || 'Nada específico'}
 
 2. Se basen en patrones exitosos de ejemplos reales con alto engagement.

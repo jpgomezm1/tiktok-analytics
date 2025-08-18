@@ -292,7 +292,7 @@ async function advancedBrainSearch(userId: string, params: SearchParams): Promis
     // Merge filters
     const filters = { ...extractedFilters, ...params.filters };
     
-    // Get user's account context
+    // Get user's account context and embeddings
     const { data: accountContext } = await supabase
       .from('tiktok_account_contexts')
       .select('*')
@@ -304,6 +304,9 @@ async function advancedBrainSearch(userId: string, params: SearchParams): Promis
       .select('embedding')
       .eq('user_id', userId)
       .maybeSingle();
+    
+    console.log('Account context loaded:', !!accountContext);
+    console.log('Context embedding loaded:', !!contextEmbedding?.embedding);
     
     // Apply context defaults
     if (accountContext) {
@@ -323,7 +326,7 @@ async function advancedBrainSearch(userId: string, params: SearchParams): Promis
     // Generate query embeddings
     const { embedding_es, embedding_en } = await generateBilingualEmbeddings(cleanedQuery);
     
-    // Build SQL query
+    // Build SQL query with enhanced context integration
     let sql = `
       WITH similarity_scores AS (
         SELECT 
@@ -331,7 +334,7 @@ async function advancedBrainSearch(userId: string, params: SearchParams): Promis
           GREATEST(
             1 - (embedding_es <=> $2::vector),
             1 - (embedding_en <=> $3::vector)
-            ${contextEmbedding ? `, 0.35 * (1 - (embedding_es <=> $4::vector)) + 0.65 * (1 - (embedding_es <=> $2::vector))` : ''}
+            ${contextEmbedding ? `, 0.25 * (1 - (embedding_es <=> $4::vector)) + 0.75 * GREATEST(1 - (embedding_es <=> $2::vector), 1 - (embedding_en <=> $3::vector))` : ''}
           ) as sim_final
         FROM tiktok_brain_vectors
         WHERE user_id = $1
